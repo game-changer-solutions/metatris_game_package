@@ -18,8 +18,12 @@ dependencies:
   backendless_sdk: ^7.2.5
   permission_handler: ^10.2.0
 
-  learning_face_detection: ^0.0.3
-  learning_input_image: ^0.0.6+2
+  learning_face_detection:
+    path: packages\learning_face_detection-0.0.3
+
+  learning_input_image:
+    path: packages/learning_input_image-0.0.6+2
+
   camera: ^0.9.4+5
   screenshot: ^2.1.0
   csv: ^5.0.1

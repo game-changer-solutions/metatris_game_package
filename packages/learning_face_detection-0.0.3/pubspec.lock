@@ -275,10 +275,9 @@ packages:
   learning_input_image:
     dependency: "direct main"
     description:
-      name: learning_input_image
-      sha256: b114495ee75aa3bb8e80ba85113528809aa4b8e296095f36ab024b4cb7f90567
-      url: "https://pub.dev"
-    source: hosted
+      path: "../learning_input_image-0.0.6+2"
+      relative: true
+    source: path
     version: "0.0.6+2"
   matcher:
     dependency: transitive

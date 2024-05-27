@@ -16,10 +16,10 @@ dependencies:
   cupertino_icons: ^1.0.2
   step_progress_indicator: ^1.0.2
   backendless_sdk: ^7.2.5
-  permission_handler: ^10.2.0
+  permission_handler: ^11.3.0
 
   learning_face_detection:
-    path: packages\learning_face_detection-0.0.3
+    path: packages/learning_face_detection-0.0.3
 
   learning_input_image:
     path: packages/learning_input_image-0.0.6+2

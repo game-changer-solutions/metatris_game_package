@@ -1,7 +1,8 @@
 // ignore_for_file: body_might_complete_normally_catch_error
 import 'dart:async';
+import 'dart:developer';
 import 'dart:io';
-import 'dart:math';
+import 'dart:math' hide log;
 import 'package:backendless_sdk/backendless_sdk.dart' as bkl;
 import 'package:collection/collection.dart';
 import 'package:csv/csv.dart';
@@ -158,6 +159,8 @@ class _GamePageState extends State<GamePage> {
 
   ScreenshotController screenshotController = ScreenshotController();
 
+  List<Map<String, dynamic>> sessionsInJson = [];
+
   void startGame() {
     setState(() {
       currentBlock = getRandomBlock();
@@ -285,12 +288,12 @@ class _GamePageState extends State<GamePage> {
       });
       timer.cancel();
       runGameTimer();
-      print("*" * 20);
-      print("Level: $level");
-      print("*" * 20);
-      print("*" * 20);
-      print("Game Speed: $gameSpeed");
-      print("*" * 20);
+      debugPrint("*" * 20);
+      debugPrint("Level: $level");
+      debugPrint("*" * 20);
+      debugPrint("*" * 20);
+      debugPrint("Game Speed: $gameSpeed");
+      debugPrint("*" * 20);
     } else if (lines % 10 == 0 && level > 20) {
       setState(() {
         gameSpeed = (gameSpeed * 0.5).round();
@@ -298,12 +301,12 @@ class _GamePageState extends State<GamePage> {
       });
       timer.cancel();
       runGameTimer();
-      print("*" * 20);
-      print("Level: $level");
-      print("*" * 20);
-      print("*" * 20);
-      print("Game Speed: $gameSpeed");
-      print("*" * 20);
+      debugPrint("*" * 20);
+      debugPrint("Level: $level");
+      debugPrint("*" * 20);
+      debugPrint("*" * 20);
+      debugPrint("Game Speed: $gameSpeed");
+      debugPrint("*" * 20);
     }
   }
 
@@ -369,12 +372,12 @@ class _GamePageState extends State<GamePage> {
             .difference(d_timer[i])
             .inSeconds);
       }
-      print("key presses time dif: $times");
+      debugPrint("key presses time dif: $times");
       avg_lat = times.average;
     } catch (e) {
       avg_lat = 0;
     }
-    print("average_lat: $avg_lat");
+    debugPrint("average_lat: $avg_lat");
     indValue = 5 *
         ((pattern_div * 0.1251132) +
             (meanHeight * 0.05239681) +
@@ -441,7 +444,7 @@ class _GamePageState extends State<GamePage> {
         Colors.red,
       ];
     }
-    print("indValue: $indValue");
+    debugPrint("indValue: $indValue");
   }
 
   void drawPattern() {
@@ -500,10 +503,10 @@ class _GamePageState extends State<GamePage> {
     }
 
     weighted_cells_avg = (weightedCell.values.toList()).average;
-    print("weighted_cell (%): $weightedCell");
+    debugPrint("weighted_cell (%): $weightedCell");
     pattern_div = (row_transitions + column_transitions) / 2;
-    print("row_transitions: $row_transitions");
-    print("column_transitions: $column_transitions");
+    debugPrint("row_transitions: $row_transitions");
+    debugPrint("column_transitions: $column_transitions");
   }
 
   bool isColumnEmpty(List<Point> list, int x, int y) {
@@ -602,10 +605,10 @@ class _GamePageState extends State<GamePage> {
       }
     }
 
-    print("PD" * 22);
-    print(
+    debugPrint("PD" * 22);
+    debugPrint(
         "$pit_depth || $pitDepthList || $pitsGroupCounter || $lumped_pits || $pit_rows");
-    print("PD" * 22);
+    debugPrint("PD" * 22);
 
     List<String> wellXTemp = [];
     for (var well in wells) {
@@ -615,36 +618,36 @@ class _GamePageState extends State<GamePage> {
     for (var pit in pits) {
       pitsXTemp.add("${pit.x}");
     }
-    print("T" * 22);
-    print(pitsXTemp);
-    print("T" * 22);
-    print("E" * 22);
-    print(wellXTemp);
-    print("E" * 22);
+    debugPrint("T" * 22);
+    debugPrint(pitsXTemp.toString());
+    debugPrint("T" * 22);
+    debugPrint("E" * 22);
+    debugPrint(wellXTemp.toString());
+    debugPrint("E" * 22);
     Map<dynamic, int> wellsMap = {};
     for (var x in wellXTemp) {
       wellsMap[x] = !wellsMap.containsKey(x) ? (1) : (wellsMap[x]! + 1);
     }
-    print("W" * 50);
-    print((wellsMap.values).toList());
+    debugPrint("W" * 50);
+    debugPrint((wellsMap.values).toList().toString());
     deep_wells = (wellsMap.values).toList().where((item) => item >= 3).length;
     try {
       max_well = (wellsMap.values).toList().reduce(max);
     } catch (e) {
-      print(e);
+      log(e.toString());
     }
     List<num> cumulativeWellsTemp = [];
     (wellsMap.values).toList().forEach((element) {
       cumulativeWellsTemp.add((pow(element, 2) + element) / 2);
     });
     cumulative_wells = cumulativeWellsTemp.average;
-    print(
+    debugPrint(
         "$max_well || $deep_wells || $cumulative_wells || $cumulativeWellsTemp");
-    print("W" * 50);
+    debugPrint("W" * 50);
 
     pits_num = pits.length;
     wells_num = wells.length;
-    print("Pits num: $pits_num, Wells num: $wells_num");
+    debugPrint("Pits num: $pits_num, Wells num: $wells_num");
   }
 
   bool playerLost() {
@@ -720,7 +723,7 @@ class _GamePageState extends State<GamePage> {
     cd_7 = Cds["columns 7-8"]!;
     cd_8 = Cds["columns 8-9"]!;
     cd_2 = Cds["columns 2-3"]!;
-    print("Columns dif: $Cds");
+    debugPrint("Columns dif: $Cds");
     meanHeight = mainPoints.average;
     maxHeight = mainPoints.reduce(max);
     minHeight = mainPoints.reduce(min);
@@ -731,7 +734,7 @@ class _GamePageState extends State<GamePage> {
         landing_height = 20 - oldPoint.y;
       }
     }
-    print(
+    debugPrint(
         "max height: $maxHeight min height: $minHeight mean height: $meanHeight maximum_differences: $maximum_differences landing height: $landing_height matches: ${currentBlock!.matches}");
 
     // jaggedness
@@ -745,7 +748,7 @@ class _GamePageState extends State<GamePage> {
           (temp[i + 1 == temp.length ? temp.length - 1 : i + 1] - temp[i])
               .abs();
     }
-    print("jaggedness: $jaggedness");
+    debugPrint("jaggedness: $jaggedness");
   }
 
   void changeBorderColorAndSize() {
@@ -754,10 +757,10 @@ class _GamePageState extends State<GamePage> {
         blocksContainerBorderColor = Colors.green;
       });
       HapticFeedback.lightImpact();
-      print("vibrate1");
+      debugPrint("vibrate1");
       Future.delayed(const Duration(milliseconds: 200), () {
         HapticFeedback.lightImpact();
-        print("vibrate2");
+        debugPrint("vibrate2");
       });
     } else if (currentBlock!.movementNum < 7) {
       setState(() {
@@ -813,55 +816,52 @@ class _GamePageState extends State<GamePage> {
     averages["indicator_value"]!.add(indValue);
   }
 
-  void sendSessionData() async {
-    await bkl.Backendless.data
-        .of("TetrisSessions")
-        .save(TetrisSessions(
-          pits: pits_num,
-          tetrises: tetrises,
-          score: score,
-          level: level,
-          lines: lines,
-          game: game,
-          rotations: currentBlock!.rotateNum,
-          proportion_of_user_drops: currentBlock!.proportion_of_user_drops,
-          minimum_rotation_difference: minimumRotationsDif,
-          minimum_translation_difference: minimumTranslationsDif,
-          maximum_differences: maximum_differences,
-          initial_latency: currentBlock!.initial_latency,
-          drop_latency: currentBlock!.drop_latency,
-          response_latency: currentBlock!.response_latency,
-          max_well: max_well,
-          deep_wells: deep_wells,
-          cumulative_wells: cumulative_wells,
-          column_transitions: column_transitions,
-          row_transitions: row_transitions,
-          landing_height: landing_height,
-          matches: currentBlock!.matches,
-          delta_max_height: delta_max_height,
-          delta_pits: delta_pits,
-          pit_depth: pit_depth,
-          lumped_pits: lumped_pits,
-          pit_rows: pit_rows,
-          max_height: maxHeight,
-          min_height: minHeight,
-          wells: wells_num,
-          avg_lat: avg_lat,
-          cd_9: cd_9,
-          mean_height: meanHeight,
-          pattern_div: pattern_div,
-          total_movements: total_movements,
-          weighted_cells: weighted_cells_avg,
-          jaggedness: jaggedness,
-          indicator_value: indValue,
-          timestamp: timestamp,
-          assigned_username: usernameInput.text,
-        ).toJson())
-        .catchError((error, stackTrace) {
-      print("Error: ${error.toString()}");
-      // showSnackBar(context, "Server Error: ${error.toString()}");
-    });
-    // showSnackBar(context, "Session created!");
+  void saveSessionData() {
+    final Map<String, dynamic> sessionInJson = TetrisSessions(
+      pits: pits_num,
+      tetrises: tetrises,
+      score: score,
+      level: level,
+      lines: lines,
+      game: game,
+      rotations: currentBlock!.rotateNum,
+      proportion_of_user_drops: currentBlock!.proportion_of_user_drops,
+      minimum_rotation_difference: minimumRotationsDif,
+      minimum_translation_difference: minimumTranslationsDif,
+      maximum_differences: maximum_differences,
+      initial_latency: currentBlock!.initial_latency,
+      drop_latency: currentBlock!.drop_latency,
+      response_latency: currentBlock!.response_latency,
+      max_well: max_well,
+      deep_wells: deep_wells,
+      cumulative_wells: cumulative_wells,
+      column_transitions: column_transitions,
+      row_transitions: row_transitions,
+      landing_height: landing_height,
+      matches: currentBlock!.matches,
+      delta_max_height: delta_max_height,
+      delta_pits: delta_pits,
+      pit_depth: pit_depth,
+      lumped_pits: lumped_pits,
+      pit_rows: pit_rows,
+      max_height: maxHeight,
+      min_height: minHeight,
+      wells: wells_num,
+      avg_lat: avg_lat,
+      cd_9: cd_9,
+      mean_height: meanHeight,
+      pattern_div: pattern_div,
+      total_movements: total_movements,
+      weighted_cells: weighted_cells_avg,
+      jaggedness: jaggedness,
+      indicator_value: indValue,
+      timestamp: timestamp,
+      assigned_username: integrationInitialized && username != null
+          ? username!
+          : usernameInput.text,
+    ).toJson();
+
+    sessionsInJson.add(sessionInJson);
   }
 
   Map<String, List<Map<String, int>>> eyeCoordinatesToJson(eyeCoordinates) {
@@ -917,7 +917,7 @@ class _GamePageState extends State<GamePage> {
           await bkl.Backendless.files.upload(f, "Tetris/eye_tracking_data");
     } catch (e) {
       fileUrl = "";
-      print(e);
+      log(e.toString());
     }
 
     f.delete();
@@ -941,14 +941,17 @@ class _GamePageState extends State<GamePage> {
             .of("TetrisEyeTrackingData")
             .save(TetrisEyeTrackingData(
                     eye_tracking_data_csv_file: fileReference!,
-                    assigned_username: usernameInput.text)
+                    assigned_username:
+                        integrationInitialized && username != null
+                            ? username!
+                            : usernameInput.text)
                 .toJson())
             .catchError((error, stackTrace) {
-          print("Error: ${error.toString()}");
+          log("Error: ${error.toString()}");
           // showSnackBar(context, "Server Error: ${error.toString()}");
         });
       } catch (e) {
-        print(e);
+        log(e.toString());
       }
 
       eyeTrackingObjId =
@@ -957,10 +960,27 @@ class _GamePageState extends State<GamePage> {
     return eyeTrackingObjId;
   }
 
-  void sendAverages() async {
-    String? eyeTrackingObjId = await uploadEyeTrackingData();
+  void sendGameData() {
+    Future<String?> eyeTrackingObjId = uploadEyeTrackingData();
 
-    Map<dynamic, dynamic>? tetrisGamesObjJson = await bkl.Backendless.data
+    List<String> sessionsIds = [];
+
+    final List<Future<dynamic>> sessionsIdsRespnses = [];
+
+    for (var i = 0; i < sessionsInJson.length; i += 99) {
+      final response = bkl.Backendless.data
+          .of("TetrisSessions")
+          .create(sessionsInJson.sublist(i, min(i + 99, sessionsInJson.length)))
+          .then((value) {
+        sessionsIds.addAll(value!);
+      }).catchError((error, stackTrace) {
+        log("Error: ${error.toString()}");
+        // showSnackBar(context, "Server Error: ${error.toString()}");
+      });
+      sessionsIdsRespnses.add(response);
+    }
+
+    bkl.Backendless.data
         .of("TetrisGames")
         .save(TetrisGames(
           avg_pits: averages["pits"]!.average,
@@ -1004,20 +1024,36 @@ class _GamePageState extends State<GamePage> {
           avg_jaggedness: averages["jaggedness"]!.average,
           avg_indicator_value: averages["indicator_value"]!.average,
           elapsed_time: timestamp,
-          assigned_username: usernameInput.text,
+          assigned_username: integrationInitialized && username != null
+              ? username!
+              : usernameInput.text,
         ).toJson())
-        .catchError((error, stackTrace) {
-      print("Error: ${error.toString()}");
+        .then((sendGamesResponse) {
+      eyeTrackingObjId.then((value) {
+        if (value != null) {
+          bkl.Backendless.data.of("TetrisGames").addRelation(
+              sendGamesResponse!["objectId"], "eye_tracking_data",
+              childrenObjectIds: [value]);
+        }
+      });
+
+      Future.wait(sessionsIdsRespnses).then((value) {
+        bkl.Backendless.data.of("TetrisGames").addRelation(
+            sendGamesResponse!["objectId"], "sessions",
+            childrenObjectIds: sessionsIds);
+      });
+
+      if (integrationInitialized && researchId != null) {
+        bkl.Backendless.data.of("TetrisGames").addRelation(
+            sendGamesResponse!["objectId"], "researchId",
+            childrenObjectIds: [researchId!]);
+      }
+
+      // showSnackBar(context, "Game created!");
+    }).catchError((error, stackTrace) {
+      log("Error: ${error.toString()}");
       // showSnackBar(context, "Server Error: ${error.toString()}");
     });
-
-    if (eyeTrackingObjId != null) {
-      await bkl.Backendless.data.of("TetrisGames").addRelation(
-          tetrisGamesObjJson!["objectId"], "eye_tracking_data",
-          childrenObjectIds: [eyeTrackingObjId]);
-    }
-
-    // showSnackBar(context, "Game created!");
   }
 
   void calcTransitions() {
@@ -1032,19 +1068,19 @@ class _GamePageState extends State<GamePage> {
           ((currentBlock!.onDropDownY1 - currentBlock!.onDropDownY2) /
                   boardHeight)
               .abs();
-      print("*" * 20);
-      print(
+      debugPrint("*" * 20);
+      debugPrint(
           "${currentBlock!.onDropDownY1} || ${currentBlock!.onDropDownY2} || ${currentBlock!.rotateNum} || ${currentBlock!.translationNum} || ${currentBlock!.proportion_of_user_drops}");
-      print("*" * 20);
+      debugPrint("*" * 20);
     } else {
       currentBlock!.proportion_of_user_drops =
           ((currentBlock!.onDropDownY1 - currentBlock!.onDropDownY2) /
                   boardHeight)
               .abs();
-      print("*" * 20);
-      print(
+      debugPrint("*" * 20);
+      debugPrint(
           "${currentBlock!.onDropDownY1} || ${currentBlock!.onDropDownY2} || ${currentBlock!.rotateNum} || ${currentBlock!.translationNum} || ${currentBlock!.proportion_of_user_drops}");
-      print("*" * 20);
+      debugPrint("*" * 20);
     }
   }
 
@@ -1053,10 +1089,10 @@ class _GamePageState extends State<GamePage> {
         (rotationCenterX - currentBlock!.rotationCenter.x).abs();
     minimumTranslationsDif =
         (currentBlock!.translationNum - optimalTranslations).abs();
-    print("=" * 20);
-    print(
+    debugPrint("=" * 20);
+    debugPrint(
         "$minimumTranslationsDif || $rotationCenterX || ${currentBlock!.rotationCenter.x} || $optimalTranslations");
-    print("=" * 20);
+    debugPrint("=" * 20);
   }
 
   void calcMinRotationsDif() {
@@ -1081,9 +1117,9 @@ class _GamePageState extends State<GamePage> {
       minimumRotationsDif =
           currentBlock!.rotateNum - (((RNum - LNum).abs()) % 4);
     }
-    print("/" * 20);
-    print("$minimumRotationsDif");
-    print("/" * 20);
+    debugPrint("/" * 20);
+    debugPrint("$minimumRotationsDif");
+    debugPrint("/" * 20);
   }
 
   void calcInitialLat() {
@@ -1116,6 +1152,9 @@ class _GamePageState extends State<GamePage> {
         enableEyeTracking = false;
       });
 
+      time.cancel();
+      timestampTimer.cancel();
+
       if (useEyeTracking) {
         screenshotController.capture().then((Uint8List? image) {
           //Capture Done
@@ -1124,20 +1163,20 @@ class _GamePageState extends State<GamePage> {
             gameOver = true;
           });
         }).catchError((onError) {
-          print(onError);
+          log(onError);
+        });
+      } else {
+        setState(() {
+          gameOver = true;
         });
       }
 
-      setState(() {
-        gameOver = true;
-      });
-
       try {
         if (!tutorialMode) {
-          sendAverages();
+          sendGameData();
         }
       } catch (e) {
-        print("$e");
+        log("$e");
       }
     }
     // Check if the current block is at the bottom or above an old block
@@ -1163,14 +1202,14 @@ class _GamePageState extends State<GamePage> {
       // calculate data
       highestPoint();
       delta_max_height = (maxHeightTemp - maxHeight).abs();
-      print("Q" * 30);
-      print("$delta_max_height");
-      print("Q" * 30);
+      debugPrint("Q" * 30);
+      debugPrint("$delta_max_height");
+      debugPrint("Q" * 30);
       getPitsAndWells();
       delta_pits = (pitsNumTemp - pits_num).abs();
-      print("DP" * 30);
-      print("$delta_pits");
-      print("DP" * 30);
+      debugPrint("DP" * 30);
+      debugPrint("$delta_pits");
+      debugPrint("DP" * 30);
       drawPattern();
       calcTransitions();
       calcMinTransDif();
@@ -1181,10 +1220,10 @@ class _GamePageState extends State<GamePage> {
         currentBlock!.response_latency =
             DateTime.now().difference(drawBlockDate).inSeconds;
       }
-      print("|" * 20);
-      print(
+      debugPrint("|" * 20);
+      debugPrint(
           "${currentBlock!.response_latency} | ${currentBlock!.drop_latency} | ${currentBlock!.initial_latency}");
-      print("|" * 20);
+      debugPrint("|" * 20);
 
       changeIndData();
 
@@ -1192,10 +1231,10 @@ class _GamePageState extends State<GamePage> {
       fillAveragesMap();
       try {
         if (!tutorialMode) {
-          sendSessionData();
+          saveSessionData();
         }
       } catch (e) {
-        print("$e");
+        log("$e");
       }
 
       // Draw new block
@@ -1353,6 +1392,8 @@ class _GamePageState extends State<GamePage> {
     };
     eyeCoordinates.clear();
     enableEyeTracking = true;
+
+    sessionsInJson.clear();
   }
 
   @override
@@ -1370,38 +1411,35 @@ class _GamePageState extends State<GamePage> {
     pointSize = height / boardHeight;
 
     return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(35),
-        child: AppBar(
-          leading: IconButton(
-            icon: const Icon(
-              Icons.arrow_back_ios_new_rounded,
-            ),
-            onPressed: () async {
-              try {
-                timer.cancel();
-                timestampTimer.cancel();
-                setState(() {
-                  enableEyeTracking = false;
-                  eyeCoordinates.clear();
-                });
-              } catch (e) {
-                print("$e");
-              }
-              Navigator.pop(context);
-            },
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
           ),
-          title: Row(children: [
-            const Image(
-              image: AssetImage("assets/images/metatris_logo.png"),
-              width: 75,
-              height: 35,
-            ),
-            Text(
-              translation(context).metatris,
-            ),
-          ]),
+          onPressed: () async {
+            try {
+              timer.cancel();
+              timestampTimer.cancel();
+              setState(() {
+                enableEyeTracking = false;
+                eyeCoordinates.clear();
+              });
+            } catch (e) {
+              log("$e");
+            }
+            Navigator.pop(context);
+          },
         ),
+        title: Row(children: [
+          const Image(
+            image: AssetImage("assets/images/metatris_logo.png"),
+            width: 100,
+            height: 50,
+          ),
+          Text(
+            translation(context).metatris,
+          ),
+        ]),
       ),
       body: Screenshot(
         controller: screenshotController,
@@ -1572,8 +1610,12 @@ class _GamePageState extends State<GamePage> {
                                                               Radius.circular(
                                                                   5)),
                                                     ),
-                                                    side: const BorderSide(
-                                                        color: Colors.blue),
+                                                    side: BorderSide(
+                                                        color: integrationInitialized &&
+                                                                primaryColor !=
+                                                                    null
+                                                            ? primaryColor!
+                                                            : Colors.blue),
                                                   ),
                                                   child: Text(
                                                     translation(context)
@@ -1912,7 +1954,7 @@ class _GamePageState extends State<GamePage> {
   void _onDropDownHoldingCancel() {
     if (startButton == "Stop") {
       setState(() {
-        print("GameSpeed: $gameSpeed // tempGameSpeed: $tempGameSpeed");
+        debugPrint("GameSpeed: $gameSpeed // tempGameSpeed: $tempGameSpeed");
         timer.cancel();
         gameSpeed = tempGameSpeed;
         runGameTimer();

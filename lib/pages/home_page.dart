@@ -45,19 +45,20 @@ class _MyHomePageState extends State<MyHomePage> {
                   const TextStyle(fontWeight: FontWeight.bold, fontSize: 25)),
         ]),
         actions: [
-          ElevatedButton(
-            onPressed: () async {
-              Locale _locale = await setLocale(
-                  translation(context).localeName == "en" ? "ar" : "en");
-              MyApp.setLocale(context, _locale);
-            },
-            child: Text(translation(context).changeLanguage,
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
-            style: ButtonStyle(
-                backgroundColor:
-                    MaterialStateProperty.all<Color>(Colors.lightBlueAccent)),
-          )
+          if (!integrationInitialized)
+            ElevatedButton(
+              onPressed: () async {
+                Locale _locale = await setLocale(
+                    translation(context).localeName == "en" ? "ar" : "en");
+                MyApp.setLocale(context, _locale);
+              },
+              child: Text(translation(context).changeLanguage,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 20)),
+              style: ButtonStyle(
+                  backgroundColor:
+                      MaterialStateProperty.all<Color>(Colors.lightBlueAccent)),
+            )
         ],
       ),
       body: Container(
@@ -133,27 +134,32 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                   ),
                 ),
-                const SizedBox(
-                  height: 15,
-                ),
-                SizedBox(
-                  width: 300,
-                  child: TextField(
-                    decoration: InputDecoration(
-                      iconColor: Colors.white,
-                      labelText: translation(context).username,
-                      border: const OutlineInputBorder(),
-                      enabledBorder: const OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.white)),
-                      labelStyle: const TextStyle(color: Colors.white),
-                    ),
-                    controller: usernameInput,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                    ),
+                if (!integrationInitialized)
+                  Column(
+                    children: [
+                      const SizedBox(
+                        height: 15,
+                      ),
+                      SizedBox(
+                        width: 300,
+                        child: TextField(
+                          decoration: InputDecoration(
+                            iconColor: Colors.white,
+                            labelText: translation(context).username,
+                            border: const OutlineInputBorder(),
+                            enabledBorder: const OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.white)),
+                            labelStyle: const TextStyle(color: Colors.white),
+                          ),
+                          controller: usernameInput,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () async {
@@ -203,7 +209,10 @@ class _MyHomePageState extends State<MyHomePage> {
                     shape: const RoundedRectangleBorder(
                       borderRadius: BorderRadius.all(Radius.circular(5)),
                     ),
-                    side: const BorderSide(color: Colors.blue),
+                    side: BorderSide(
+                        color: integrationInitialized && primaryColor != null
+                            ? primaryColor!
+                            : Colors.blue),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -219,6 +228,43 @@ class _MyHomePageState extends State<MyHomePage> {
                     ],
                   ),
                 ),
+                if (integrationInitialized)
+                  Column(
+                    children: [
+                      const SizedBox(height: 10),
+                      OutlinedButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        style: OutlinedButton.styleFrom(
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(5)),
+                          ),
+                          side: BorderSide(
+                              color:
+                                  integrationInitialized && primaryColor != null
+                                      ? primaryColor!
+                                      : Colors.blue),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: <Widget>[
+                            Text(
+                              translation(context).exit,
+                              style: const TextStyle(fontSize: 20),
+                            ),
+                            const SizedBox(
+                              width: 5,
+                            ),
+                            const Icon(
+                              Icons.exit_to_app,
+                              size: 20,
+                            )
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
               ],
             ),
           ),

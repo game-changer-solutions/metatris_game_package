@@ -11,8 +11,7 @@ import '../../blocks/Sblock.dart';
 import '../../blocks/SQblock.dart';
 import '../../blocks/Tblock.dart';
 import '../../blocks/Zblock.dart';
-import 'dart:math' hide log;
-import 'dart:developer';
+import 'dart:math';
 
 // Initialization Variables
 bool integrationInitialized = false;
@@ -37,29 +36,6 @@ initIntegration({
   localName = newLocalName;
   themeMode = newThemeMode;
   primaryColor = newPrimaryColor;
-  integrationInitialized = true;
-}
-
-// Initialization Variables
-bool integrationInitialized = false;
-String? username;
-String? researchId;
-String? localName;
-ThemeMode? themeMode;
-Color? primaryColor;
-
-initIntegration({
-  String? username,
-  String? researchId,
-  String? localName,
-  ThemeMode? themeMode,
-  Color? primaryColor,
-}) {
-  username = username;
-  researchId = researchId;
-  localName = localName;
-  themeMode = themeMode;
-  primaryColor = primaryColor;
   integrationInitialized = true;
 }
 

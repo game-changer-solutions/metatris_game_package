@@ -39,8 +39,8 @@ class TetrisSessions {
   int timestamp;
   String assigned_username;
   String? objectId;
-  DateTime? created;
-  DateTime? updated;
+  // DateTime? created;
+  // DateTime? updated;
 
   TetrisSessions({
     required this.pits,
@@ -83,8 +83,8 @@ class TetrisSessions {
     required this.timestamp,
     required this.assigned_username,
     this.objectId,
-    this.created,
-    this.updated,
+    // this.created,
+    // this.updated,
   });
 
   Map<String, Object?> toJson() => {
@@ -127,8 +127,8 @@ class TetrisSessions {
         'indicator_value': indicator_value,
         'timestamp': timestamp,
         'assigned_username': assigned_username,
-        'created': created,
-        'updated': updated,
+        // 'created': created,
+        // 'updated': updated,
         'objectId': objectId,
       };
 
@@ -174,7 +174,7 @@ class TetrisSessions {
         timestamp: json['timestamp'] as int,
         assigned_username: json['assigned_username'] as String,
         objectId: json['objectId'] as String?,
-        created: json['created'] as DateTime?,
-        updated: json['updated'] as DateTime?,
+        // created: json['created'] as DateTime?,
+        // updated: json['updated'] as DateTime?,
       );
 }

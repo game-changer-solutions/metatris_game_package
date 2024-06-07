@@ -11,7 +11,34 @@ import '../../blocks/Sblock.dart';
 import '../../blocks/SQblock.dart';
 import '../../blocks/Tblock.dart';
 import '../../blocks/Zblock.dart';
-import 'dart:math';
+import 'dart:math' hide log;
+import 'dart:developer';
+
+// Initialization Variables
+bool integrationInitialized = false;
+String? username;
+String? userId;
+String? researchId;
+String? localName;
+ThemeMode? themeMode;
+Color? primaryColor;
+
+initIntegration({
+  String? newUsername,
+  String? newUserId,
+  String? newResearchId,
+  String? newLocalName,
+  ThemeMode? newThemeMode,
+  Color? newPrimaryColor,
+}) {
+  username = newUsername;
+  userId = newUserId;
+  researchId = newResearchId;
+  localName = newLocalName;
+  themeMode = newThemeMode;
+  primaryColor = newPrimaryColor;
+  integrationInitialized = true;
+}
 
 // Initialization Variables
 bool integrationInitialized = false;

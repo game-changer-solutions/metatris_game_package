@@ -134,36 +134,33 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                   ),
                 ),
+                const SizedBox(
+                  height: 15,
+                ),
                 if (!integrationInitialized)
-                  Column(
-                    children: [
-                      const SizedBox(
-                        height: 15,
+                  SizedBox(
+                    width: 300,
+                    child: TextField(
+                      decoration: InputDecoration(
+                        iconColor: Colors.white,
+                        labelText: translation(context).username,
+                        border: const OutlineInputBorder(),
+                        enabledBorder: const OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.white)),
+                        labelStyle: const TextStyle(color: Colors.white),
                       ),
-                      SizedBox(
-                        width: 300,
-                        child: TextField(
-                          decoration: InputDecoration(
-                            iconColor: Colors.white,
-                            labelText: translation(context).username,
-                            border: const OutlineInputBorder(),
-                            enabledBorder: const OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.white)),
-                            labelStyle: const TextStyle(color: Colors.white),
-                          ),
-                          controller: usernameInput,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                          ),
-                        ),
+                      controller: usernameInput,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
                       ),
-                    ],
-                  ),
+                    ),
+                   ),
+                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () async {
-                    if (usernameInput.text == "") {
+                    if (usernameInput.text == "" && (!integrationInitialized)) {
                       showSnackBar(
                           context, translation(context).usernameRequiredField);
                     } else {
@@ -228,43 +225,44 @@ class _MyHomePageState extends State<MyHomePage> {
                     ],
                   ),
                 ),
-                if (integrationInitialized)
-                  Column(
-                    children: [
-                      const SizedBox(height: 10),
-                      OutlinedButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        style: OutlinedButton.styleFrom(
-                          shape: const RoundedRectangleBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(5)),
-                          ),
-                          side: BorderSide(
-                              color:
-                                  integrationInitialized && primaryColor != null
-                                      ? primaryColor!
-                                      : Colors.blue),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: <Widget>[
-                            Text(
-                              translation(context).exit,
-                              style: const TextStyle(fontSize: 20),
-                            ),
-                            const SizedBox(
-                              width: 5,
-                            ),
-                            const Icon(
-                              Icons.exit_to_app,
-                              size: 20,
-                            )
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+                // if (integrationInitialized)
+                //   Column(
+                //     children: [
+                //       const SizedBox(height: 10),
+                //       OutlinedButton(
+                //         onPressed: () {
+                //           Navigator.of(context).pop();
+                //           Navigator.of(context).pop();
+                //         },
+                //         style: OutlinedButton.styleFrom(
+                //           shape: const RoundedRectangleBorder(
+                //             borderRadius: BorderRadius.all(Radius.circular(5)),
+                //           ),
+                //           side: BorderSide(
+                //               color:
+                //                   integrationInitialized && primaryColor != null
+                //                       ? primaryColor!
+                //                       : Colors.blue),
+                //         ),
+                //         child: Row(
+                //           mainAxisSize: MainAxisSize.min,
+                //           children: <Widget>[
+                //             Text(
+                //               translation(context).exit,
+                //               style: const TextStyle(fontSize: 20),
+                //             ),
+                //             const SizedBox(
+                //               width: 5,
+                //             ),
+                //             const Icon(
+                //               Icons.exit_to_app,
+                //               size: 20,
+                //             )
+                //           ],
+                //         ),
+                //       ),
+                //     ],
+                //   ),
               ],
             ),
           ),

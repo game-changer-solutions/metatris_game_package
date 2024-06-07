@@ -7,6 +7,8 @@ import 'routes/routes.dart';
 
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
+import 'dart:developer';
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);

@@ -1043,6 +1043,12 @@ class _GamePageState extends State<GamePage> {
             childrenObjectIds: sessionsIds);
       });
 
+      if (integrationInitialized && userId != null) {
+        bkl.Backendless.data.of("TetrisGames").addRelation(
+            sendGamesResponse!["objectId"], "userId",
+            childrenObjectIds: [userId!]);
+      }
+
       if (integrationInitialized && researchId != null) {
         bkl.Backendless.data.of("TetrisGames").addRelation(
             sendGamesResponse!["objectId"], "researchId",

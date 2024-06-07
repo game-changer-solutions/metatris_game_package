@@ -50,7 +50,7 @@ late Timer moveTimer;
 Uint8List? screenshotImage;
 
 class GamePage extends StatefulWidget {
-  const GamePage({Key? key}) : super(key: key);
+  const GamePage({super.key});
 
   @override
   State<GamePage> createState() => _GamePageState();
@@ -906,8 +906,8 @@ class _GamePageState extends State<GamePage> {
 
     Directory appDocDirectory = await getApplicationDocumentsDirectory();
 
-    File f = File(appDocDirectory.path +
-        "/eye_tracking_data_${usernameInput.text}_${DateTime.now().toString().replaceAll(" ", "_").replaceAll(":", "-")}.csv");
+    File f = File(
+        "${appDocDirectory.path}/eye_tracking_data_${usernameInput.text}_${DateTime.now().toString().replaceAll(" ", "_").replaceAll(":", "-")}.csv");
 
     f.writeAsStringSync(csv);
 
@@ -1271,9 +1271,9 @@ class _GamePageState extends State<GamePage> {
     // Current Block
     for (var point in currentBlock!.points) {
       Positioned newPoint = Positioned(
-        child: getTetrisPoint(currentBlock!.color),
         left: point.x * pointSize,
         top: point.y * pointSize,
+        child: getTetrisPoint(currentBlock!.color),
       );
       visiblePoints.add(newPoint);
     }
@@ -1281,9 +1281,9 @@ class _GamePageState extends State<GamePage> {
     // Old Blocks
     for (var point in alivePoints) {
       Positioned newPoint = Positioned(
-        child: getTetrisPoint(point.color),
         left: point.x * pointSize,
         top: point.y * pointSize,
+        child: getTetrisPoint(point.color),
       );
       visiblePoints.add(newPoint);
     }
@@ -1328,13 +1328,13 @@ class _GamePageState extends State<GamePage> {
 
     for (var point in nextBlockDisplay!.points) {
       Positioned newPoint = Positioned(
-        child: getTetrisPoint(nextBlock!.color),
         left: (point.x < 0 || point.y > 0)
             ? (point.x + 1) * pointSize
             : point.x * pointSize,
         top: (point.y < 0 || point.x > 0)
             ? (point.y + 1) * pointSize
             : point.y * pointSize,
+        child: getTetrisPoint(nextBlock!.color),
       );
       visiblePoints.add(newPoint);
     }
@@ -1769,11 +1769,11 @@ class _GamePageState extends State<GamePage> {
                                         });
                                       }
                                     },
+                                    style: ElevatedButton.styleFrom(
+                                        minimumSize: const Size(65, 45)),
                                     child: const Icon(
                                       Icons.arrow_left,
                                     ),
-                                    style: ElevatedButton.styleFrom(
-                                        minimumSize: const Size(65, 45)),
                                   ),
                                 ),
                               ),
@@ -1809,11 +1809,11 @@ class _GamePageState extends State<GamePage> {
                                         });
                                       }
                                     },
+                                    style: ElevatedButton.styleFrom(
+                                        minimumSize: const Size(65, 45)),
                                     child: const Icon(
                                       Icons.arrow_right,
                                     ),
-                                    style: ElevatedButton.styleFrom(
-                                        minimumSize: const Size(65, 45)),
                                   ),
                                 ),
                               ),
@@ -1848,11 +1848,11 @@ class _GamePageState extends State<GamePage> {
                                   : null,
                               child: ElevatedButton(
                                 onPressed: () {},
+                                style: ElevatedButton.styleFrom(
+                                    minimumSize: const Size(65, 45)),
                                 child: const Icon(
                                   Icons.arrow_drop_down,
                                 ),
-                                style: ElevatedButton.styleFrom(
-                                    minimumSize: const Size(65, 45)),
                               ),
                             ),
                           ),
@@ -1888,6 +1888,11 @@ class _GamePageState extends State<GamePage> {
                               }
                             });
                           },
+                          style: ElevatedButton.styleFrom(
+                            shape: const CircleBorder(),
+                            backgroundColor: Colors.red,
+                            minimumSize: const Size(70, 70),
+                          ),
                           child: Text(
                             startButton == "Start"
                                 ? translation(context).start
@@ -1895,11 +1900,6 @@ class _GamePageState extends State<GamePage> {
                             style: const TextStyle(
                               fontSize: 14,
                             ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            shape: const CircleBorder(),
-                            backgroundColor: Colors.red,
-                            minimumSize: const Size(70, 70),
                           ),
                         ),
                       ),
@@ -1919,11 +1919,11 @@ class _GamePageState extends State<GamePage> {
                               });
                             }
                           },
+                          style: ElevatedButton.styleFrom(
+                              minimumSize: const Size(65, 45)),
                           child: const Icon(
                             Icons.rotate_left,
                           ),
-                          style: ElevatedButton.styleFrom(
-                              minimumSize: const Size(65, 45)),
                         ),
                       ),
                       Padding(
@@ -1941,11 +1941,11 @@ class _GamePageState extends State<GamePage> {
                               });
                             }
                           },
+                          style: ElevatedButton.styleFrom(
+                              minimumSize: const Size(65, 45)),
                           child: const Icon(
                             Icons.rotate_right,
                           ),
-                          style: ElevatedButton.styleFrom(
-                              minimumSize: const Size(65, 45)),
                         ),
                       ),
                     ],

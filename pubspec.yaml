@@ -1,6 +1,7 @@
 name: metatris_game_package
 description: "A new Flutter package project."
-version: 0.0.2
+version: 0.0.3
+
 homepage:
 
 environment:

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:metatris_game_package/pages/eye_tracking/eye_tracking.dart';
-import 'package:metatris_game_package/pages/game_page.dart';
 
+import 'package:metatris_game_package/pages/game_page.dart';
 
 import '../helper/language_constants.dart';
 
@@ -17,28 +17,25 @@ class _EyeTrackingResultsPageState extends State<EyeTrackingResultsPage> {
   Widget build(BuildContext context) {
     // TODO: implement build
     return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(35),
-        child: AppBar(
-          leading: IconButton(
-            icon: const Icon(
-              Icons.arrow_back_ios_new_rounded,
-            ),
-            onPressed: () async {
-              Navigator.pop(context);
-            },
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
           ),
-          title: Row(children: [
-            const Image(
-              image: AssetImage("assets/images/metatris_logo.png"),
-              width: 75,
-              height: 35,
-            ),
-            Text(
-              translation(context).metatris,
-            ),
-          ]),
+          onPressed: () async {
+            Navigator.pop(context);
+          },
         ),
+        title: Row(children: [
+          const Image(
+            image: AssetImage("assets/images/metatris_logo.png"),
+            width: 100,
+            height: 50,
+          ),
+          Text(
+            translation(context).metatris,
+          ),
+        ]),
       ),
       body: Center(
         child: Container(

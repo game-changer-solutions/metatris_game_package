@@ -1,18 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:metatris_game_package/pages/helper/helper.dart';
 import 'package:metatris_game_package/pages/helper/language_constants.dart';
 
 import 'routes/routes.dart';
 
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
+import 'dart:developer';
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   runApp(const MyApp());
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -40,7 +44,6 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     return MaterialApp(
       title: 'Metatris',
       debugShowCheckedModeBanner: false,
@@ -48,8 +51,18 @@ class _MyAppState extends State<MyApp> {
       onGenerateRoute: RouteManager.generateRoute,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      locale: _locale,
-      theme: ThemeData(useMaterial3: false),
+      locale: integrationInitialized && localName != null
+          ? Locale(localName!)
+          : _locale,
+      theme: ThemeData(
+          useMaterial3: false,
+          colorScheme: integrationInitialized && primaryColor != null
+              ? ColorScheme.fromSeed(seedColor: primaryColor!)
+              : null),
+      darkTheme: ThemeData.dark(useMaterial3: false),
+      themeMode: integrationInitialized && themeMode != null
+          ? themeMode
+          : ThemeMode.light,
     );
   }
 }

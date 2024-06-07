@@ -961,13 +961,6 @@ class _GamePageState extends State<GamePage> {
   }
 
   void sendGameData() {
-    log("*************************************************************");
-    log(integrationInitialized.toString());
-    log(localName.toString());
-    log(primaryColor.toString());
-    log(researchId.toString());
-    log(username.toString());
-    log("*************************************************************");
     Future<String?> eyeTrackingObjId = uploadEyeTrackingData();
 
     List<String> sessionsIds = [];

@@ -40,6 +40,29 @@ initIntegration({
   integrationInitialized = true;
 }
 
+// Initialization Variables
+bool integrationInitialized = false;
+String? username;
+String? researchId;
+String? localName;
+ThemeMode? themeMode;
+Color? primaryColor;
+
+initIntegration({
+  String? username,
+  String? researchId,
+  String? localName,
+  ThemeMode? themeMode,
+  Color? primaryColor,
+}) {
+  username = username;
+  researchId = researchId;
+  localName = localName;
+  themeMode = themeMode;
+  primaryColor = primaryColor;
+  integrationInitialized = true;
+}
+
 Block? getRandomBlock() {
   int randomNum = Random().nextInt(7);
   switch (randomNum) {

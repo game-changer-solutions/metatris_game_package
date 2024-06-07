@@ -1,4 +1,3 @@
-
 class TetrisGames {
   double avg_pits;
   double avg_rotations;
@@ -40,8 +39,8 @@ class TetrisGames {
   int elapsed_time;
   String assigned_username;
   String? objectId;
-  DateTime? created;
-  DateTime? updated;
+  // DateTime? created;
+  // DateTime? updated;
 
   TetrisGames({
     required this.avg_pits,
@@ -84,8 +83,8 @@ class TetrisGames {
     required this.elapsed_time,
     required this.assigned_username,
     this.objectId,
-    this.created,
-    this.updated,
+    // this.created,
+    // this.updated,
   });
 
   Map<String, Object?> toJson() => {
@@ -129,8 +128,8 @@ class TetrisGames {
         'avg_indicator_value': avg_indicator_value,
         'elapsed_time': elapsed_time,
         'assigned_username': assigned_username,
-        'created': created,
-        'updated': updated,
+        // 'created': created,
+        // 'updated': updated,
         'objectId': objectId,
       };
 
@@ -178,7 +177,7 @@ class TetrisGames {
         elapsed_time: json['elapsed_time'] as int,
         assigned_username: json['assigned_username'] as String,
         objectId: json['objectId'] as String?,
-        created: json['created'] as DateTime?,
-        updated: json['updated'] as DateTime?,
+        // created: json['created'] as DateTime?,
+        // updated: json['updated'] as DateTime?,
       );
 }

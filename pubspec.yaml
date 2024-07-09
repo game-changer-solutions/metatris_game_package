@@ -23,7 +23,7 @@ dependencies:
   learning_input_image: ^0.0.6+2
 
   camera: ^0.9.4+5
-  screenshot: ^2.1.0
+  screenshot: ^3.0.0
   csv: ^5.0.1
   path_provider: ^2.0.15
 

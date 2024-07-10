@@ -11,8 +11,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:screenshot/screenshot.dart';
-import 'package:metatris_game_package/blocks/Iblock.dart';
 import 'package:metatris_game_package/blocks/Lblock.dart';
+import 'package:metatris_game_package/blocks/Iblock.dart';
 import 'package:metatris_game_package/blocks/alivePoints.dart';
 import 'package:metatris_game_package/blocks/block.dart';
 import 'package:metatris_game_package/models/eye_tracking_data.dart';
@@ -31,6 +31,7 @@ import '../blocks/Tblock.dart';
 import '../blocks/Zblock.dart';
 import 'package:step_progress_indicator/step_progress_indicator.dart';
 
+import '../init.dart';
 import 'home_page.dart';
 
 enum LastButtonPressed { left, right, rotateLeft, rotateRight, none }

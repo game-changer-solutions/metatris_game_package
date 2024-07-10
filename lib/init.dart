@@ -1,5 +1,14 @@
 import 'package:backendless_sdk/backendless_sdk.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+
+// Initialization Variables
+bool integrationInitialized = false;
+String? username;
+String? userId;
+String? researchId;
+String? localName;
+ThemeMode? themeMode;
+Color? primaryColor;
 
 class InitApp {
   static const String apiKeyAndroid = '20CE2D9E-0741-4C02-85D6-A8EE096E8443';
@@ -18,6 +27,23 @@ class InitApp {
     ).onError((error, stackTrace) {
       result = error.toString();
     });
-    print(result);
+    debugPrint(result);
+  }
+
+  static void initIntegration({
+    String? newUsername,
+    String? newUserId,
+    String? newResearchId,
+    String? newLocalName,
+    ThemeMode? newThemeMode,
+    Color? newPrimaryColor,
+  }) {
+    username = newUsername;
+    userId = newUserId;
+    researchId = newResearchId;
+    localName = newLocalName;
+    themeMode = newThemeMode;
+    primaryColor = newPrimaryColor;
+    integrationInitialized = true;
   }
 }

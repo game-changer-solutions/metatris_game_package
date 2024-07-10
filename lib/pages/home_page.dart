@@ -54,7 +54,7 @@ class _MyHomePageState extends State<MyHomePage> {
               },
               style: ButtonStyle(
                   backgroundColor:
-                      MaterialStateProperty.all<Color>(Colors.lightBlueAccent)),
+                      WidgetStateProperty.all<Color>(Colors.lightBlueAccent)),
               child: Text(translation(context).changeLanguage,
                   style: const TextStyle(
                       fontWeight: FontWeight.bold, fontSize: 20)),
@@ -156,7 +156,6 @@ class _MyHomePageState extends State<MyHomePage> {
                       ),
                     ),
                   ),
-
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () async {

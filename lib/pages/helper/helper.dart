@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:metatris_game_package/pages/helper/language_constants.dart';
 import 'package:metatris_game_package/pages/home_page.dart';
+import '../../init.dart';
 import '../game_page.dart';
 import '../../blocks/block.dart';
 import '../../blocks/Iblock.dart';
@@ -11,33 +12,7 @@ import '../../blocks/Sblock.dart';
 import '../../blocks/SQblock.dart';
 import '../../blocks/Tblock.dart';
 import '../../blocks/Zblock.dart';
-import 'dart:math';
-
-// Initialization Variables
-bool integrationInitialized = false;
-String? username;
-String? userId;
-String? researchId;
-String? localName;
-ThemeMode? themeMode;
-Color? primaryColor;
-
-initIntegration({
-  String? newUsername,
-  String? newUserId,
-  String? newResearchId,
-  String? newLocalName,
-  ThemeMode? newThemeMode,
-  Color? newPrimaryColor,
-}) {
-  username = newUsername;
-  userId = newUserId;
-  researchId = newResearchId;
-  localName = newLocalName;
-  themeMode = newThemeMode;
-  primaryColor = newPrimaryColor;
-  integrationInitialized = true;
-}
+import 'dart:math' hide log;
 
 Block? getRandomBlock() {
   int randomNum = Random().nextInt(7);

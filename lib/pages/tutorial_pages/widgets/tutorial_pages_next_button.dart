@@ -8,10 +8,10 @@ class TutorialPagesNextButton extends StatelessWidget {
   final String routeName;
 
   const TutorialPagesNextButton({
-    Key? key,
+    super.key,
     this.name,
     required this.routeName,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

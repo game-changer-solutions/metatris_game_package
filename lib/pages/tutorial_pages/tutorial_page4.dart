@@ -6,7 +6,7 @@ import 'widgets/tutorial_pages_appbar.dart';
 import 'widgets/tutorial_pages_next_button.dart';
 
 class TutorialPage4 extends StatelessWidget {
-  const TutorialPage4({Key? key}) : super(key: key);
+  const TutorialPage4({super.key});
 
   @override
   Widget build(BuildContext context) {

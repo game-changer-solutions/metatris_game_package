@@ -6,7 +6,6 @@ import 'dart:math' hide log;
 import 'package:backendless_sdk/backendless_sdk.dart' as bkl;
 import 'package:collection/collection.dart';
 import 'package:csv/csv.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
@@ -22,17 +21,16 @@ import 'package:metatris_game_package/pages/eye_tracking/eye_tracking.dart';
 import 'package:metatris_game_package/pages/helper/helper.dart';
 import 'package:metatris_game_package/pages/helper/language_constants.dart';
 import 'package:metatris_game_package/pages/tutorial_pages/tutorial_page11.dart';
-import 'package:metatris_game_package/routes/routes.dart';
-
 import '../blocks/Jblock.dart';
 import '../blocks/SQblock.dart';
 import '../blocks/Sblock.dart';
 import '../blocks/Tblock.dart';
 import '../blocks/Zblock.dart';
 import 'package:step_progress_indicator/step_progress_indicator.dart';
-
 import '../init.dart';
+import 'eye_tracking/eye_tracking_results_page.dart';
 import 'home_page.dart';
+import 'tutorial_pages/tutorial_page12.dart';
 
 enum LastButtonPressed { left, right, rotateLeft, rotateRight, none }
 
@@ -191,7 +189,13 @@ class _GamePageState extends State<GamePage> {
           if (timestamp > tutorialModeTime) {
             tutorialTimer.cancel();
             timer.cancel();
-            Navigator.of(context).popAndPushNamed(RouteManager.tutorialPage12);
+            // Navigator.of(context).popAndPushNamed(RouteManager.tutorialPage12);
+            Navigator.of(context).pop();
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const TutorialPage12(),
+              ),
+            );
           }
         }
       },
@@ -1417,542 +1421,610 @@ class _GamePageState extends State<GamePage> {
     // width = height / 2.0;
     pointSize = height / boardHeight;
 
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios_new_rounded,
+    return PopScope(
+      onPopInvoked: (didPop) {
+        if (didPop) {
+          try {
+            timer.cancel();
+            timestampTimer.cancel();
+            setState(() {
+              enableEyeTracking = false;
+              eyeCoordinates.clear();
+            });
+          } catch (e) {
+            log("$e");
+          }
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(
+              Icons.arrow_back_ios_new_rounded,
+            ),
+            onPressed: () {
+              try {
+                timer.cancel();
+                timestampTimer.cancel();
+                setState(() {
+                  enableEyeTracking = false;
+                  eyeCoordinates.clear();
+                });
+              } catch (e) {
+                log("$e");
+              }
+              Navigator.pop(context);
+            },
           ),
-          onPressed: () async {
-            try {
-              timer.cancel();
-              timestampTimer.cancel();
-              setState(() {
-                enableEyeTracking = false;
-                eyeCoordinates.clear();
-              });
-            } catch (e) {
-              log("$e");
-            }
-            Navigator.pop(context);
-          },
+          title: Row(children: [
+            const Image(
+              image: AssetImage("assets/images/metatris_logo.png"),
+              width: 100,
+              height: 50,
+            ),
+            Text(
+              translation(context).metatris,
+            ),
+          ]),
         ),
-        title: Row(children: [
-          const Image(
-            image: AssetImage("assets/images/metatris_logo.png"),
-            width: 100,
-            height: 50,
-          ),
-          Text(
-            translation(context).metatris,
-          ),
-        ]),
-      ),
-      body: Screenshot(
-        controller: screenshotController,
-        child: Container(
-          color: Colors.black,
-          child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                tutorialMode
-                    ? Padding(
-                        padding: const EdgeInsets.all(3.0),
-                        child: Text(
-                          "${tutorialModeTime - timestamp < 0 ? 0 : tutorialModeTime - timestamp}",
-                          style: TextStyle(
-                            color: tutorialModeTime - timestamp <= 10
-                                ? Colors.red
-                                : Colors.white,
-                            fontSize: 17,
-                            fontWeight: FontWeight.bold,
+        body: Screenshot(
+          controller: screenshotController,
+          child: Container(
+            color: Colors.black,
+            child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  tutorialMode
+                      ? Padding(
+                          padding: const EdgeInsets.all(3.0),
+                          child: Text(
+                            "${tutorialModeTime - timestamp < 0 ? 0 : tutorialModeTime - timestamp}",
+                            style: TextStyle(
+                              color: tutorialModeTime - timestamp <= 10
+                                  ? Colors.red
+                                  : Colors.white,
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
                           ),
-                          textAlign: TextAlign.center,
-                        ),
-                      )
-                    : Container(),
-                const SizedBox(
-                  height: 10,
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(3.0),
-                  child: Text(
-                    showScore ? "${translation(context).score} $score" : "",
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
+                        )
+                      : Container(),
+                  const SizedBox(
+                    height: 10,
                   ),
-                ),
-                Directionality(
-                  textDirection: TextDirection.ltr,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Row(
-                        children: [
-                          showScore
-                              ? Column(
-                                  children: [
-                                    const SizedBox(height: 20),
-                                    Padding(
-                                      padding: const EdgeInsets.all(3.0),
-                                      child: Text(
-                                        "${translation(context).tetrises}\n$tetrises",
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ),
-                                    const SizedBox(
-                                      height: 40,
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.all(3.0),
-                                      child: Text(
-                                        "${translation(context).lines}\n$lines",
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ),
-                                    const SizedBox(
-                                      height: 40,
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.all(3.0),
-                                      child: Text(
-                                        "${translation(context).level}\n$level",
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ),
-                                    const SizedBox(
-                                      height: 40,
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.all(3.0),
-                                      child: Text(
-                                        "${translation(context).games}\n$game",
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ),
-                                  ],
-                                )
-                              : Container(),
-                          const SizedBox(
-                            width: 10,
-                          ),
-                          Center(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                    color: blocksContainerBorderColor ??
-                                        Colors.white,
-                                    width: 3),
-                              ),
-                              child: Container(
-                                margin: const EdgeInsets.all(1),
-                                width: width,
-                                height: height,
-                                child: gameOver
-                                    ? Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          getGameOverText(score, context),
-                                          const SizedBox(
-                                            height: 30,
+                  Padding(
+                    padding: const EdgeInsets.all(3.0),
+                    child: Text(
+                      showScore ? "${translation(context).score} $score" : "",
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  Directionality(
+                    textDirection: TextDirection.ltr,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Row(
+                          children: [
+                            showScore
+                                ? Column(
+                                    children: [
+                                      const SizedBox(height: 20),
+                                      Padding(
+                                        padding: const EdgeInsets.all(3.0),
+                                        child: Text(
+                                          "${translation(context).tetrises}\n$tetrises",
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
                                           ),
-                                          ElevatedButton(
-                                            onPressed: () {
-                                              resetSomeVariables();
-                                              setState(() {
-                                                game++;
-                                                alivePoints.removeWhere(
-                                                    (element) => true);
-                                              });
-                                              timer.cancel();
-                                              timestampTimer.cancel();
-                                              startGame();
-                                            },
-                                            child: Text(
-                                              translation(context).tryAgain,
-                                              style: const TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.bold,
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                      const SizedBox(
+                                        height: 40,
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.all(3.0),
+                                        child: Text(
+                                          "${translation(context).lines}\n$lines",
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                      const SizedBox(
+                                        height: 40,
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.all(3.0),
+                                        child: Text(
+                                          "${translation(context).level}\n$level",
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                      const SizedBox(
+                                        height: 40,
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.all(3.0),
+                                        child: Text(
+                                          "${translation(context).games}\n$game",
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                : Container(),
+                            const SizedBox(
+                              width: 10,
+                            ),
+                            Center(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                      color: blocksContainerBorderColor ??
+                                          Colors.white,
+                                      width: 3),
+                                ),
+                                child: Container(
+                                  margin: const EdgeInsets.all(1),
+                                  width: width,
+                                  height: height,
+                                  child: gameOver
+                                      ? Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            getGameOverText(score, context),
+                                            const SizedBox(
+                                              height: 30,
+                                            ),
+                                            ElevatedButton(
+                                              onPressed: () {
+                                                resetSomeVariables();
+                                                setState(() {
+                                                  game++;
+                                                  alivePoints.removeWhere(
+                                                      (element) => true);
+                                                });
+                                                timer.cancel();
+                                                timestampTimer.cancel();
+                                                startGame();
+                                              },
+                                              child: Text(
+                                                translation(context).tryAgain,
+                                                style: const TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.white,
+                                                ),
                                               ),
                                             ),
-                                          ),
-                                          !tutorialMode && useEyeTracking
-                                              ? OutlinedButton(
-                                                  onPressed: () {
-                                                    Navigator.of(context)
-                                                        .pushNamed(RouteManager
-                                                            .eyeTrackingPage);
-                                                  },
-                                                  style:
-                                                      OutlinedButton.styleFrom(
-                                                    shape:
-                                                        const RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.all(
-                                                              Radius.circular(
-                                                                  5)),
+                                            !tutorialMode && useEyeTracking
+                                                ? OutlinedButton(
+                                                    onPressed: () {
+                                                      // Navigator.of(context)
+                                                      //     .pushNamed(RouteManager
+                                                      //         .eyeTrackingPage);
+                                                      Navigator.of(context)
+                                                          .push(
+                                                        MaterialPageRoute(
+                                                          builder: (context) =>
+                                                              const EyeTrackingResultsPage(),
+                                                        ),
+                                                      );
+                                                    },
+                                                    style: OutlinedButton
+                                                        .styleFrom(
+                                                      shape:
+                                                          const RoundedRectangleBorder(
+                                                        borderRadius:
+                                                            BorderRadius.all(
+                                                                Radius.circular(
+                                                                    5)),
+                                                      ),
+                                                      side: BorderSide(
+                                                          color: integrationInitialized &&
+                                                                  primaryColor !=
+                                                                      null
+                                                              ? primaryColor!
+                                                              : Colors.blue),
                                                     ),
-                                                    side: BorderSide(
-                                                        color: integrationInitialized &&
+                                                    child: Text(
+                                                      translation(context)
+                                                          .viewEyeTrackingResults,
+                                                      style: const TextStyle(
+                                                          fontSize: 10),
+                                                    ),
+                                                  )
+                                                : Container(),
+                                            OutlinedButton(
+                                              onPressed: () {
+                                                try {
+                                                  timer.cancel();
+                                                  timestampTimer.cancel();
+                                                  setState(() {
+                                                    enableEyeTracking = false;
+                                                    eyeCoordinates.clear();
+                                                  });
+                                                } catch (e) {
+                                                  log("$e");
+                                                }
+                                                Navigator.pop(context);
+                                              },
+                                              style: OutlinedButton.styleFrom(
+                                                shape:
+                                                    const RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.all(
+                                                          Radius.circular(5)),
+                                                ),
+                                                side: BorderSide(
+                                                    color:
+                                                        integrationInitialized &&
                                                                 primaryColor !=
                                                                     null
                                                             ? primaryColor!
                                                             : Colors.blue),
-                                                  ),
-                                                  child: Text(
-                                                    translation(context)
-                                                        .viewEyeTrackingResults,
-                                                    style: const TextStyle(
-                                                        fontSize: 12),
-                                                  ),
-                                                )
-                                              : Container(),
-                                        ],
-                                      )
-                                    : drawTetrisBlocks(),
+                                              ),
+                                              child: Text(
+                                                translation(context).exit,
+                                                style: const TextStyle(
+                                                    fontSize: 16),
+                                              ),
+                                            )
+                                          ],
+                                        )
+                                      : drawTetrisBlocks(),
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(
-                            width: 10,
-                          ),
-                          Column(
-                            children: [
-                              Container(
-                                width: screenWidth / 5,
-                                // height: 150,
-                                decoration: BoxDecoration(
-                                  borderRadius: const BorderRadius.all(
-                                      Radius.circular(10)),
-                                  border: Border.all(color: Colors.transparent),
-                                ),
-                                child: Column(children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.all(3.0),
-                                        child: Text(
-                                          translation(context).nextBlock,
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
+                            const SizedBox(
+                              width: 10,
+                            ),
+                            Column(
+                              children: [
+                                Container(
+                                  width: screenWidth / 5,
+                                  // height: 150,
+                                  decoration: BoxDecoration(
+                                    borderRadius: const BorderRadius.all(
+                                        Radius.circular(10)),
+                                    border:
+                                        Border.all(color: Colors.transparent),
+                                  ),
+                                  child: Column(children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Padding(
+                                          padding: const EdgeInsets.all(3.0),
+                                          child: Text(
+                                            translation(context).nextBlock,
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(
-                                    height: 10,
-                                  ),
-                                  Center(
-                                    child: SizedBox(
-                                      width: screenWidth / 5,
-                                      height: pointSize * 3,
-                                      child: gameOver
-                                          ? Container()
-                                          : drawNextBlocks(),
+                                      ],
                                     ),
-                                  ),
-                                ]),
-                              ),
-                              const SizedBox(
-                                height: 60,
-                              ),
-                              showIndicator
-                                  ? SizedBox(
-                                      width: screenWidth / 5,
-                                      height: 200,
-                                      child: Center(
-                                        // child: RotatedBox(
-                                        //   quarterTurns: -1,
-                                        child: StepProgressIndicator(
-                                          direction: Axis.vertical,
-                                          totalSteps: 100,
-                                          currentStep: indValue.round(),
-                                          size: 30,
-                                          padding: 0,
-                                          // selectedColor: Colors.yellow,
-                                          // unselectedColor: Colors.cyan,
-                                          roundedEdges:
-                                              const Radius.circular(10),
-                                          selectedGradientColor:
-                                              const LinearGradient(
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                            colors: [
-                                              Colors.grey,
-                                              Colors.transparent
-                                            ],
-                                          ),
-                                          unselectedGradientColor:
-                                              LinearGradient(
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                            colors: indColor,
+                                    const SizedBox(
+                                      height: 10,
+                                    ),
+                                    Center(
+                                      child: SizedBox(
+                                        width: screenWidth / 5,
+                                        height: pointSize * 3,
+                                        child: gameOver
+                                            ? Container()
+                                            : drawNextBlocks(),
+                                      ),
+                                    ),
+                                  ]),
+                                ),
+                                const SizedBox(
+                                  height: 60,
+                                ),
+                                showIndicator
+                                    ? SizedBox(
+                                        width: screenWidth / 5,
+                                        height: 200,
+                                        child: Center(
+                                          // child: RotatedBox(
+                                          //   quarterTurns: -1,
+                                          child: StepProgressIndicator(
+                                            direction: Axis.vertical,
+                                            totalSteps: 100,
+                                            currentStep: indValue.round(),
+                                            size: 30,
+                                            padding: 0,
+                                            // selectedColor: Colors.yellow,
+                                            // unselectedColor: Colors.cyan,
+                                            roundedEdges:
+                                                const Radius.circular(10),
+                                            selectedGradientColor:
+                                                const LinearGradient(
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight,
+                                              colors: [
+                                                Colors.grey,
+                                                Colors.transparent
+                                              ],
+                                            ),
+                                            unselectedGradientColor:
+                                                LinearGradient(
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight,
+                                              colors: indColor,
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                    )
-                                  : Container(),
-                              const SizedBox(height: 20),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ],
+                                      )
+                                    : Container(),
+                                const SizedBox(height: 20),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                Directionality(
-                  textDirection: TextDirection.ltr,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Column(
-                        children: [
-                          Row(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.all(3.0),
-                                child: GestureDetector(
-                                  onTapDown: (details) {
-                                    if (startButton == "Stop") {
-                                      performAction = LastButtonPressed.left;
-                                      d_timer.add(DateTime.now());
-                                      calcInitialLat();
-                                      moveTimer = Timer.periodic(
-                                        const Duration(milliseconds: 50),
-                                        checkForUserInput,
-                                      );
-                                    }
-                                  },
-                                  onTapCancel: () {
-                                    moveTimer.cancel();
-                                    performAction = LastButtonPressed.none;
-                                  },
-                                  child: ElevatedButton(
-                                    onPressed: () {
+                  Directionality(
+                    textDirection: TextDirection.ltr,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Column(
+                          children: [
+                            Row(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.all(3.0),
+                                  child: GestureDetector(
+                                    onTapDown: (details) {
                                       if (startButton == "Stop") {
+                                        performAction = LastButtonPressed.left;
                                         d_timer.add(DateTime.now());
                                         calcInitialLat();
-                                        setState(() {
-                                          performAction =
-                                              LastButtonPressed.left;
-                                          checkForUserInput(null);
-                                          performAction =
-                                              LastButtonPressed.none;
-                                        });
+                                        moveTimer = Timer.periodic(
+                                          const Duration(milliseconds: 50),
+                                          checkForUserInput,
+                                        );
                                       }
                                     },
-                                    style: ElevatedButton.styleFrom(
-                                        minimumSize: const Size(65, 45)),
-                                    child: const Icon(
-                                      Icons.arrow_left,
+                                    onTapCancel: () {
+                                      moveTimer.cancel();
+                                      performAction = LastButtonPressed.none;
+                                    },
+                                    child: ElevatedButton(
+                                      onPressed: () {
+                                        if (startButton == "Stop") {
+                                          d_timer.add(DateTime.now());
+                                          calcInitialLat();
+                                          setState(() {
+                                            performAction =
+                                                LastButtonPressed.left;
+                                            checkForUserInput(null);
+                                            performAction =
+                                                LastButtonPressed.none;
+                                          });
+                                        }
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                          minimumSize: const Size(65, 45)),
+                                      child: const Icon(
+                                        Icons.arrow_left,
+                                        color: Colors.white,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(3.0),
-                                child: GestureDetector(
-                                  onTapDown: (details) {
-                                    if (startButton == "Stop") {
-                                      performAction = LastButtonPressed.right;
-                                      d_timer.add(DateTime.now());
-                                      calcInitialLat();
-                                      moveTimer = Timer.periodic(
-                                        const Duration(milliseconds: 50),
-                                        checkForUserInput,
-                                      );
-                                    }
-                                  },
-                                  onTapCancel: () {
-                                    moveTimer.cancel();
-                                    performAction = LastButtonPressed.none;
-                                  },
-                                  child: ElevatedButton(
-                                    onPressed: () {
+                                Padding(
+                                  padding: const EdgeInsets.all(3.0),
+                                  child: GestureDetector(
+                                    onTapDown: (details) {
                                       if (startButton == "Stop") {
+                                        performAction = LastButtonPressed.right;
                                         d_timer.add(DateTime.now());
                                         calcInitialLat();
-                                        setState(() {
-                                          performAction =
-                                              LastButtonPressed.right;
-                                          checkForUserInput(null);
-                                          performAction =
-                                              LastButtonPressed.none;
-                                        });
+                                        moveTimer = Timer.periodic(
+                                          const Duration(milliseconds: 50),
+                                          checkForUserInput,
+                                        );
                                       }
                                     },
-                                    style: ElevatedButton.styleFrom(
-                                        minimumSize: const Size(65, 45)),
-                                    child: const Icon(
-                                      Icons.arrow_right,
+                                    onTapCancel: () {
+                                      moveTimer.cancel();
+                                      performAction = LastButtonPressed.none;
+                                    },
+                                    child: ElevatedButton(
+                                      onPressed: () {
+                                        if (startButton == "Stop") {
+                                          d_timer.add(DateTime.now());
+                                          calcInitialLat();
+                                          setState(() {
+                                            performAction =
+                                                LastButtonPressed.right;
+                                            checkForUserInput(null);
+                                            performAction =
+                                                LastButtonPressed.none;
+                                          });
+                                        }
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                          minimumSize: const Size(65, 45)),
+                                      child: const Icon(
+                                        Icons.arrow_right,
+                                        color: Colors.white,
+                                      ),
                                     ),
                                   ),
                                 ),
+                              ],
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 40),
+                              child: GestureDetector(
+                                onTapDown: (details) {
+                                  if (startButton == "Stop") {
+                                    setState(() {
+                                      tempGameSpeed = gameSpeed;
+                                      timer.cancel();
+                                      gameSpeed = 50;
+                                      runGameTimer();
+                                    });
+                                    dropDownHolding = true;
+                                    currentBlock!.onDropDownY1 =
+                                        currentBlock!.rotationCenter.y;
+                                    d_timer.add(DateTime.now());
+                                    calcInitialLat();
+                                    currentBlock!.dropDownCounter++;
+                                    if (currentBlock!.dropDownCounter == 1) {
+                                      currentBlock!.drop_latency =
+                                          DateTime.now()
+                                              .difference(drawBlockDate)
+                                              .inSeconds;
+                                    }
+                                  }
+                                },
+                                onTapCancel: dropDownHolding
+                                    ? () => _onDropDownHoldingCancel()
+                                    : null,
+                                child: ElevatedButton(
+                                  onPressed: () {},
+                                  style: ElevatedButton.styleFrom(
+                                      minimumSize: const Size(65, 45)),
+                                  child: const Icon(
+                                    Icons.arrow_drop_down,
+                                    color: Colors.white,
+                                  ),
+                                ),
                               ),
-                            ],
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 40),
-                            child: GestureDetector(
-                              onTapDown: (details) {
+                            ),
+                          ],
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(
+                              bottom: 93, top: 3, left: 3, right: 3),
+                          child: ElevatedButton(
+                            onPressed: () {
+                              setState(() {
                                 if (startButton == "Stop") {
+                                  startButton = "Start";
+                                  timer.cancel();
+                                  timestampTimer.cancel();
                                   setState(() {
-                                    tempGameSpeed = gameSpeed;
-                                    timer.cancel();
-                                    gameSpeed = 50;
-                                    runGameTimer();
+                                    enableEyeTracking = false;
                                   });
-                                  dropDownHolding = true;
-                                  currentBlock!.onDropDownY1 =
-                                      currentBlock!.rotationCenter.y;
-                                  d_timer.add(DateTime.now());
-                                  calcInitialLat();
-                                  currentBlock!.dropDownCounter++;
-                                  if (currentBlock!.dropDownCounter == 1) {
-                                    currentBlock!.drop_latency = DateTime.now()
-                                        .difference(drawBlockDate)
-                                        .inSeconds;
+                                } else {
+                                  startButton = "Stop";
+                                  if (currentBlock == null) {
+                                    startGame();
+                                  } else {
+                                    runGameTimer();
+                                    runTimestampTimer();
+                                  }
+                                  // Start eye tracking
+                                  if (!gameOver) {
+                                    setState(() {
+                                      enableEyeTracking = true;
+                                    });
                                   }
                                 }
-                              },
-                              onTapCancel: dropDownHolding
-                                  ? () => _onDropDownHoldingCancel()
-                                  : null,
-                              child: ElevatedButton(
-                                onPressed: () {},
-                                style: ElevatedButton.styleFrom(
-                                    minimumSize: const Size(65, 45)),
-                                child: const Icon(
-                                  Icons.arrow_drop_down,
-                                ),
+                              });
+                            },
+                            style: ElevatedButton.styleFrom(
+                              shape: const CircleBorder(),
+                              backgroundColor: Colors.red,
+                              minimumSize: const Size(70, 70),
+                            ),
+                            child: Text(
+                              startButton == "Start"
+                                  ? translation(context).start
+                                  : translation(context).stop,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
                               ),
                             ),
                           ),
-                        ],
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(
-                            bottom: 93, top: 3, left: 3, right: 3),
-                        child: ElevatedButton(
-                          onPressed: () {
-                            setState(() {
+                        ),
+                        enableEyeTracking ? const EyeTracking() : Container(),
+                        Padding(
+                          padding: const EdgeInsets.only(
+                              bottom: 93, top: 3, left: 3, right: 3),
+                          child: ElevatedButton(
+                            onPressed: () {
                               if (startButton == "Stop") {
-                                startButton = "Start";
-                                timer.cancel();
-                                timestampTimer.cancel();
+                                d_timer.add(DateTime.now());
+                                calcInitialLat();
                                 setState(() {
-                                  enableEyeTracking = false;
+                                  performAction = LastButtonPressed.rotateLeft;
+                                  checkForUserInput(null);
+                                  performAction = LastButtonPressed.none;
                                 });
-                              } else {
-                                startButton = "Stop";
-                                if (currentBlock == null) {
-                                  startGame();
-                                } else {
-                                  runGameTimer();
-                                  runTimestampTimer();
-                                }
-                                // Start eye tracking
-                                if (!gameOver) {
-                                  setState(() {
-                                    enableEyeTracking = true;
-                                  });
-                                }
                               }
-                            });
-                          },
-                          style: ElevatedButton.styleFrom(
-                            shape: const CircleBorder(),
-                            backgroundColor: Colors.red,
-                            minimumSize: const Size(70, 70),
-                          ),
-                          child: Text(
-                            startButton == "Start"
-                                ? translation(context).start
-                                : translation(context).stop,
-                            style: const TextStyle(
-                              fontSize: 14,
+                            },
+                            style: ElevatedButton.styleFrom(
+                                minimumSize: const Size(65, 45)),
+                            child: const Icon(
+                              Icons.rotate_left,
+                              color: Colors.white,
                             ),
                           ),
                         ),
-                      ),
-                      enableEyeTracking ? const EyeTracking() : Container(),
-                      Padding(
-                        padding: const EdgeInsets.only(
-                            bottom: 93, top: 3, left: 3, right: 3),
-                        child: ElevatedButton(
-                          onPressed: () {
-                            if (startButton == "Stop") {
-                              d_timer.add(DateTime.now());
-                              calcInitialLat();
-                              setState(() {
-                                performAction = LastButtonPressed.rotateLeft;
-                                checkForUserInput(null);
-                                performAction = LastButtonPressed.none;
-                              });
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                              minimumSize: const Size(65, 45)),
-                          child: const Icon(
-                            Icons.rotate_left,
+                        Padding(
+                          padding: const EdgeInsets.only(
+                              bottom: 93, top: 3, left: 3, right: 3),
+                          child: ElevatedButton(
+                            onPressed: () {
+                              if (startButton == "Stop") {
+                                d_timer.add(DateTime.now());
+                                calcInitialLat();
+                                setState(() {
+                                  performAction = LastButtonPressed.rotateRight;
+                                  checkForUserInput(null);
+                                  performAction = LastButtonPressed.none;
+                                });
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                                minimumSize: const Size(65, 45)),
+                            child: const Icon(
+                              Icons.rotate_right,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(
-                            bottom: 93, top: 3, left: 3, right: 3),
-                        child: ElevatedButton(
-                          onPressed: () {
-                            if (startButton == "Stop") {
-                              d_timer.add(DateTime.now());
-                              calcInitialLat();
-                              setState(() {
-                                performAction = LastButtonPressed.rotateRight;
-                                checkForUserInput(null);
-                                performAction = LastButtonPressed.none;
-                              });
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                              minimumSize: const Size(65, 45)),
-                          child: const Icon(
-                            Icons.rotate_right,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              ]),
+                      ],
+                    ),
+                  )
+                ]),
+          ),
         ),
       ),
     );

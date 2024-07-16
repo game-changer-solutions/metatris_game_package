@@ -3,7 +3,7 @@ import 'package:metatris_game_package/blocks/point.dart';
 
 class AlivePoint extends Point {
   Color color;
-  AlivePoint(super.x, super.y, this.color);
+  AlivePoint(int x, int y, this.color) : super(x, y);
 
   bool checkIfPointsCollide(List<Point> pointList, {int Ydistance = 1}) {
     bool value = false;

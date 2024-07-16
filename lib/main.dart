@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:metatris_game_package/pages/helper/language_constants.dart';
-
-import 'init.dart';
 import 'routes/routes.dart';
-
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 void main() {
@@ -14,7 +11,7 @@ void main() {
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+  const MyApp({Key? key}) : super(key: key);
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -44,58 +41,15 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Metatris',
+      theme: ThemeData(useMaterial3: false),
       debugShowCheckedModeBanner: false,
       initialRoute: RouteManager.homePage,
       onGenerateRoute: RouteManager.generateRoute,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      locale: integrationInitialized && localName != null
-          ? Locale(localName!)
-          : _locale,
-      theme: ThemeData(
-        useMaterial3: false,
-        colorScheme: integrationInitialized && primaryColor != null
-            ? ColorScheme.fromSeed(seedColor: primaryColor!)
-            : null,
-        appBarTheme: AppBarTheme(
-          backgroundColor: integrationInitialized && primaryColor != null
-              ? primaryColor!
-              : null,
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: integrationInitialized && primaryColor != null
-                ? primaryColor!
-                : null,
-          ),
-        ),
-        switchTheme: SwitchThemeData(
-          thumbColor:
-              WidgetStateProperty.resolveWith((Set<WidgetState> states) {
-            if (states.contains(WidgetState.selected)) {
-              return integrationInitialized && primaryColor != null
-                  ? primaryColor!
-                  : null;
-            }
-            return null;
-          }),
-          trackColor:
-              WidgetStateProperty.resolveWith((Set<WidgetState> states) {
-            if (states.contains(WidgetState.selected)) {
-              return integrationInitialized && primaryColor != null
-                  ? primaryColor!.withOpacity(0.7)
-                  : null;
-            }
-            return integrationInitialized && primaryColor != null
-                ? primaryColor!.withOpacity(0.3)
-                : null;
-          }),
-        ),
-      ),
+      locale: _locale,
       darkTheme: ThemeData.dark(useMaterial3: false),
-      themeMode: integrationInitialized && themeMode != null
-          ? themeMode
-          : ThemeMode.light,
+      themeMode: ThemeMode.light,
     );
   }
 }

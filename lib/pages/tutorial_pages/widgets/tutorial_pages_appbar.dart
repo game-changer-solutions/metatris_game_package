@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-
-import '../../../routes/routes.dart';
 import '../../helper/language_constants.dart';
+import '../../home_page.dart';
 
 class TutorialPagesAppBar extends StatelessWidget
     implements PreferredSizeWidget {
   const TutorialPagesAppBar({
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   AppBar build(BuildContext context) {
@@ -26,8 +25,12 @@ class TutorialPagesAppBar extends StatelessWidget
       actions: [
         TextButton(
           onPressed: () {
-            Navigator.of(context).pushNamedAndRemoveUntil(
-                RouteManager.homePage, (route) => false);
+            // Navigator.of(context).pushNamedAndRemoveUntil(
+            //     RouteManager.homePage, (route) => false);
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (context) => const MyHomePage()),
+              (route) => false,
+            );
           },
           child: Row(
             children: [

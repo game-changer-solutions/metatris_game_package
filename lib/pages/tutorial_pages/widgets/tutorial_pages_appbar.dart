@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+
+import '../../../init.dart';
+import '../../../routes/routes.dart';
 import '../../helper/language_constants.dart';
-import '../../home_page.dart';
 
 class TutorialPagesAppBar extends StatelessWidget
     implements PreferredSizeWidget {
   const TutorialPagesAppBar({
-    super.key,
-  });
+    Key? key,
+  }) : super(key: key);
 
   @override
   AppBar build(BuildContext context) {
@@ -25,12 +27,13 @@ class TutorialPagesAppBar extends StatelessWidget
       actions: [
         TextButton(
           onPressed: () {
-            // Navigator.of(context).pushNamedAndRemoveUntil(
-            //     RouteManager.homePage, (route) => false);
-            Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (context) => const MyHomePage()),
-              (route) => false,
-            );
+            if (integrationInitialized) {
+              Navigator.popUntil(
+                  context, ModalRoute.withName("/metatris_home_page"));
+            } else {
+              Navigator.of(context).pushNamedAndRemoveUntil(
+                  RouteManager.homePage, (route) => false);
+            }
           },
           child: Row(
             children: [

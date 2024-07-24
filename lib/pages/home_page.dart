@@ -6,7 +6,9 @@ import 'package:metatris_game_package/main.dart';
 import 'package:metatris_game_package/pages/helper/helper.dart';
 import 'package:metatris_game_package/pages/helper/language_constants.dart';
 import 'package:metatris_game_package/pages/tutorial_pages/tutorial_page11.dart';
+
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 import 'game_page.dart';
 import 'tutorial_pages/tutorial_page1.dart';
 
@@ -17,8 +19,8 @@ bool useEyeTracking = true;
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -57,10 +59,13 @@ class _MyHomePageState extends State<MyHomePage> {
             if (!integrationInitialized)
               ElevatedButton(
                 onPressed: () async {
-                  Locale _locale = await setLocale(
+                  Locale locale = await setLocale(
                       translation(context).localeName == "en" ? "ar" : "en");
-                  MyApp.setLocale(context, _locale);
+                  MyApp.setLocale(context, locale);
                 },
+                style: ButtonStyle(
+                    backgroundColor:
+                        WidgetStateProperty.all<Color>(Colors.lightBlueAccent)),
                 child: Text(
                   translation(context).changeLanguage,
                   style: const TextStyle(
@@ -69,9 +74,6 @@ class _MyHomePageState extends State<MyHomePage> {
                     color: Colors.white,
                   ),
                 ),
-                style: ButtonStyle(
-                    backgroundColor:
-                        WidgetStateProperty.all<Color>(Colors.lightBlueAccent)),
               )
           ],
         ),

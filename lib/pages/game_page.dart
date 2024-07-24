@@ -6,6 +6,7 @@ import 'dart:math' hide log;
 import 'package:backendless_sdk/backendless_sdk.dart' as bkl;
 import 'package:collection/collection.dart';
 import 'package:csv/csv.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
@@ -21,12 +22,14 @@ import 'package:metatris_game_package/pages/eye_tracking/eye_tracking.dart';
 import 'package:metatris_game_package/pages/helper/helper.dart';
 import 'package:metatris_game_package/pages/helper/language_constants.dart';
 import 'package:metatris_game_package/pages/tutorial_pages/tutorial_page11.dart';
+
 import '../blocks/Jblock.dart';
 import '../blocks/SQblock.dart';
 import '../blocks/Sblock.dart';
 import '../blocks/Tblock.dart';
 import '../blocks/Zblock.dart';
 import 'package:step_progress_indicator/step_progress_indicator.dart';
+
 import '../init.dart';
 import 'eye_tracking/eye_tracking_results_page.dart';
 import 'home_page.dart';
@@ -1621,6 +1624,9 @@ class _GamePageState extends State<GamePage> {
                                                 ),
                                               ),
                                             ),
+                                            const SizedBox(
+                                              height: 10,
+                                            ),
                                             !tutorialMode && useEyeTracking
                                                 ? OutlinedButton(
                                                     onPressed: () {
@@ -1659,6 +1665,9 @@ class _GamePageState extends State<GamePage> {
                                                     ),
                                                   )
                                                 : Container(),
+                                            const SizedBox(
+                                              height: 10,
+                                            ),
                                             OutlinedButton(
                                               onPressed: () {
                                                 try {

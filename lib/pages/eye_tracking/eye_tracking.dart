@@ -14,7 +14,7 @@ Size? originalSize;
 InputImageRotation? rotation;
 
 class EyeTracking extends StatefulWidget {
-  const EyeTracking({Key? key}) : super(key: key);
+  const EyeTracking({super.key});
 
   @override
   State<EyeTracking> createState() => _EyeTrackingState();

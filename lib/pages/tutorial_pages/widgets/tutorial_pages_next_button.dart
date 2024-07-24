@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:metatris_game_package/routes/routes.dart';
+
+import '../../../init.dart';
 import '../../helper/language_constants.dart';
 
 class TutorialPagesNextButton extends StatelessWidget {
@@ -23,14 +25,13 @@ class TutorialPagesNextButton extends StatelessWidget {
         //   Navigator.of(context).pushNamed(routeName);
         // }
         if (routeName == RouteManager.homePage) {
-          // Navigator.of(context)
-          //     .pushNamedAndRemoveUntil(routeName, (route) => false);
-          Navigator.of(context).pushAndRemoveUntil(
-            RouteManager.generateRoute(
-              RouteSettings(name: routeName),
-            ),
-            (route) => false,
-          );
+          if (integrationInitialized) {
+            Navigator.popUntil(
+                context, ModalRoute.withName("/metatris_home_page"));
+          } else {
+            Navigator.of(context).pushNamedAndRemoveUntil(
+                RouteManager.homePage, (route) => false);
+          }
         } else {
           // Navigator.of(context).pushNamed(routeName);
           Navigator.of(context).push(

@@ -14,7 +14,7 @@ Size? originalSize;
 InputImageRotation? rotation;
 
 class EyeTracking extends StatefulWidget {
-  const EyeTracking({super.key});
+  const EyeTracking({Key? key}) : super(key: key);
 
   @override
   State<EyeTracking> createState() => _EyeTrackingState();
@@ -167,8 +167,8 @@ class _EyeTrackingState extends State<EyeTracking> {
     Offset eyeOffset =
         Offset(xEye.floor().toDouble().abs(), yEye.floor().toDouble().abs());
     eyeCoordinates.add(eyeOffset);
-    print("X Coordinate: ${eyeOffset.dx}");
-    print("Y Coordinate: ${eyeOffset.dy}");
+    debugPrint("X Coordinate: ${eyeOffset.dx}");
+    debugPrint("Y Coordinate: ${eyeOffset.dy}");
     // for (var eyeCoordinate in eyeCoordinates) {
     //   canvas.drawCircle(
     //       Offset(

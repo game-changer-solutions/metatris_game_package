@@ -1,12 +1,11 @@
 // ignore_for_file: body_might_complete_normally_catch_error
 import 'dart:async';
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'dart:math' hide log;
-import 'package:backendless_sdk/backendless_sdk.dart' as bkl;
 import 'package:collection/collection.dart';
 import 'package:csv/csv.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
@@ -15,25 +14,23 @@ import 'package:metatris_game_package/blocks/Lblock.dart';
 import 'package:metatris_game_package/blocks/Iblock.dart';
 import 'package:metatris_game_package/blocks/alivePoints.dart';
 import 'package:metatris_game_package/blocks/block.dart';
-import 'package:metatris_game_package/models/eye_tracking_data.dart';
 import 'package:metatris_game_package/models/games.dart';
 import 'package:metatris_game_package/models/sessions.dart';
 import 'package:metatris_game_package/pages/eye_tracking/eye_tracking.dart';
 import 'package:metatris_game_package/pages/helper/helper.dart';
 import 'package:metatris_game_package/pages/helper/language_constants.dart';
 import 'package:metatris_game_package/pages/tutorial_pages/tutorial_page11.dart';
-
 import '../blocks/Jblock.dart';
 import '../blocks/SQblock.dart';
 import '../blocks/Sblock.dart';
 import '../blocks/Tblock.dart';
 import '../blocks/Zblock.dart';
 import 'package:step_progress_indicator/step_progress_indicator.dart';
-
 import '../init.dart';
 import 'eye_tracking/eye_tracking_results_page.dart';
 import 'home_page.dart';
 import 'tutorial_pages/tutorial_page12.dart';
+import 'package:http/http.dart' as http;
 
 enum LastButtonPressed { left, right, rotateLeft, rotateRight, none }
 
@@ -52,7 +49,7 @@ late Timer moveTimer;
 Uint8List? screenshotImage;
 
 class GamePage extends StatefulWidget {
-  const GamePage({super.key});
+  const GamePage({Key? key}) : super(key: key);
 
   @override
   State<GamePage> createState() => _GamePageState();
@@ -119,40 +116,6 @@ class _GamePageState extends State<GamePage> {
   String startButton = "Start";
   int timestamp = 0;
   late Timer timestampTimer;
-  Map<String, List<double>> averages = {
-    "pits": [],
-    "rotations": [],
-    "proportion_of_user_drops": [],
-    "minimum_rotation_difference": [],
-    "minimum_translation_difference": [],
-    "maximum_differences": [],
-    "initial_latency": [],
-    "drop_latency": [],
-    "response_latency": [],
-    "max_well": [],
-    "deep_wells": [],
-    "cumulative_wells": [],
-    "column_transitions": [],
-    "row_transitions": [],
-    "landing_height": [],
-    "matches": [],
-    "delta_max_height": [],
-    "delta_pits": [],
-    "pit_depth": [],
-    "lumped_pits": [],
-    "pit_rows": [],
-    "max_height": [],
-    "min_height": [],
-    "wells": [],
-    "avg_lat": [],
-    "cd_9": [],
-    "mean_height": [],
-    "pattern_div": [],
-    "total_movements": [],
-    "weighted_cells": [],
-    "jaggedness": [],
-    "indicator_value": [],
-  };
 
   // Tutorial mode variables
   int tutorialModeTime = 30;
@@ -161,7 +124,9 @@ class _GamePageState extends State<GamePage> {
 
   ScreenshotController screenshotController = ScreenshotController();
 
-  List<Map<String, dynamic>> sessionsInJson = [];
+  List<Session> sessions = [];
+
+  String? resultId; // for research result relationship
 
   void startGame() {
     setState(() {
@@ -211,21 +176,21 @@ class _GamePageState extends State<GamePage> {
         switch (performAction) {
           case LastButtonPressed.left:
             currentBlock!.move(MoveDir.left);
-            if (isAboveOldBlock(Ydistance: 0)) {
+            if (isAboveOldBlock(yDistance: 0)) {
               currentBlock!.move(MoveDir.right);
               currentBlock!.movementNum--;
             }
             break;
           case LastButtonPressed.right:
             currentBlock!.move(MoveDir.right);
-            if (isAboveOldBlock(Ydistance: 0)) {
+            if (isAboveOldBlock(yDistance: 0)) {
               currentBlock!.move(MoveDir.left);
               currentBlock!.movementNum--;
             }
             break;
           case LastButtonPressed.rotateLeft:
             currentBlock!.rotateLeft();
-            if (isAboveOldBlock(Ydistance: 0) ||
+            if (isAboveOldBlock(yDistance: 0) ||
                 currentBlock!.isAtBottom() ||
                 currentBlock!.name == "SQBlock") {
               currentBlock!.rotateRight();
@@ -234,7 +199,7 @@ class _GamePageState extends State<GamePage> {
             break;
           case LastButtonPressed.rotateRight:
             currentBlock!.rotateRight();
-            if (isAboveOldBlock(Ydistance: 0) ||
+            if (isAboveOldBlock(yDistance: 0) ||
                 currentBlock!.isAtBottom() ||
                 currentBlock!.name == "SQBlock") {
               currentBlock!.rotateLeft();
@@ -263,11 +228,11 @@ class _GamePageState extends State<GamePage> {
     }
   }
 
-  bool isAboveOldBlock({int Ydistance = 1}) {
+  bool isAboveOldBlock({int yDistance = 1}) {
     bool value = false;
     for (var oldPoint in alivePoints) {
       if (oldPoint.checkIfPointsCollide(currentBlock!.points,
-          Ydistance: Ydistance)) {
+          yDistance: yDistance)) {
         value = true;
       }
     }
@@ -579,7 +544,6 @@ class _GamePageState extends State<GamePage> {
 
     pit_depth = pitDepthList.average;
 
-    // TODO: Not work
     int pitsGroupCounter = 0;
     for (var i = 0; i < pits.length; i++) {
       num x = pits[i].x;
@@ -720,18 +684,18 @@ class _GamePageState extends State<GamePage> {
     for (var i = 1; i <= boardWidth; i++) {
       mainPoints.add(boardHeight - pointsY["$i column"]!.reduce(min));
     }
-    Map<String, int> Cds = {};
+    Map<String, int> cds = {};
     for (int i = 1; i <= boardWidth; i++) {
-      Cds["columns $i-${i + 1 > boardWidth ? boardWidth : i + 1}"] =
+      cds["columns $i-${i + 1 > boardWidth ? boardWidth : i + 1}"] =
           (mainPoints[i == boardWidth ? boardWidth - 1 : i] - mainPoints[i - 1])
               .abs();
     }
-    cd_9 = Cds["columns 9-10"]!;
-    cd_1 = Cds["columns 1-2"]!;
-    cd_7 = Cds["columns 7-8"]!;
-    cd_8 = Cds["columns 8-9"]!;
-    cd_2 = Cds["columns 2-3"]!;
-    debugPrint("Columns dif: $Cds");
+    cd_9 = cds["columns 9-10"]!;
+    cd_1 = cds["columns 1-2"]!;
+    cd_7 = cds["columns 7-8"]!;
+    cd_8 = cds["columns 8-9"]!;
+    cd_2 = cds["columns 2-3"]!;
+    debugPrint("Columns dif: $cds");
     meanHeight = mainPoints.average;
     maxHeight = mainPoints.reduce(max);
     minHeight = mainPoints.reduce(min);
@@ -785,53 +749,13 @@ class _GamePageState extends State<GamePage> {
     }
   }
 
-  void fillAveragesMap() {
-    averages["pits"]!.add(pits_num.toDouble());
-    averages["rotations"]!.add(currentBlock!.rotateNum.toDouble());
-    averages["proportion_of_user_drops"]!
-        .add(currentBlock!.proportion_of_user_drops);
-    averages["minimum_rotation_difference"]!
-        .add(minimumRotationsDif.toDouble());
-    averages["minimum_translation_difference"]!
-        .add(minimumTranslationsDif.toDouble());
-    averages["maximum_differences"]!.add(maximum_differences.toDouble());
-    averages["initial_latency"]!.add(currentBlock!.initial_latency.toDouble());
-    averages["drop_latency"]!.add(currentBlock!.drop_latency.toDouble());
-    averages["response_latency"]!
-        .add(currentBlock!.response_latency.toDouble());
-    averages["max_well"]!.add(max_well.toDouble());
-    averages["deep_wells"]!.add(deep_wells.toDouble());
-    averages["cumulative_wells"]!.add(cumulative_wells);
-    averages["column_transitions"]!.add(column_transitions.toDouble());
-    averages["row_transitions"]!.add(row_transitions.toDouble());
-    averages["landing_height"]!.add(landing_height.toDouble());
-    averages["matches"]!.add(currentBlock!.matches.toDouble());
-    averages["delta_max_height"]!.add(delta_max_height.toDouble());
-    averages["delta_pits"]!.add(delta_pits.toDouble());
-    averages["pit_depth"]!.add(pit_depth);
-    averages["lumped_pits"]!.add(lumped_pits);
-    averages["pit_rows"]!.add(pit_rows.toDouble());
-    averages["max_height"]!.add(maxHeight.toDouble());
-    averages["min_height"]!.add(minHeight.toDouble());
-    averages["wells"]!.add(wells_num.toDouble());
-    averages["avg_lat"]!.add(avg_lat);
-    averages["cd_9"]!.add(cd_9.toDouble());
-    averages["mean_height"]!.add(meanHeight);
-    averages["pattern_div"]!.add(pattern_div);
-    averages["total_movements"]!.add(total_movements.toDouble());
-    averages["weighted_cells"]!.add(weighted_cells_avg);
-    averages["jaggedness"]!.add(jaggedness.toDouble());
-    averages["indicator_value"]!.add(indValue);
-  }
-
   void saveSessionData() {
-    final Map<String, dynamic> sessionInJson = TetrisSessions(
+    final Session session = Session(
       pits: pits_num,
       tetrises: tetrises,
       score: score,
       level: level,
       lines: lines,
-      game: game,
       rotations: currentBlock!.rotateNum,
       proportion_of_user_drops: currentBlock!.proportion_of_user_drops,
       minimum_rotation_difference: minimumRotationsDif,
@@ -864,15 +788,13 @@ class _GamePageState extends State<GamePage> {
       jaggedness: jaggedness,
       indicator_value: indValue,
       timestamp: timestamp,
-      assigned_username: integrationInitialized && username != null
-          ? username!
-          : usernameInput.text,
-    ).toJson();
+    );
 
-    sessionsInJson.add(sessionInJson);
+    sessions.add(session);
   }
 
-  Map<String, List<Map<String, int>>> eyeCoordinatesToJson(eyeCoordinates) {
+  Map<String, List<Map<String, int>>> eyeCoordinatesToJson(
+      List<Offset> eyeCoordinates) {
     Map<String, List<Map<String, int>>> eyeCoordinatesJSON = {
       "Eye Coordinates": []
     };
@@ -890,8 +812,7 @@ class _GamePageState extends State<GamePage> {
     return eyeCoordinatesJSON;
   }
 
-  Future<String?> writeAndUploadEyeTrackingCsvFile(
-      List<Map<String, int>> points) async {
+  Future<File> writeEyeTrackingCsvFile(List<Map<String, int>> points) async {
     List<List<dynamic>> rows = [];
 
     List<dynamic> mainRow = [];
@@ -912,162 +833,91 @@ class _GamePageState extends State<GamePage> {
 
     String csv = const ListToCsvConverter().convert(rows);
 
-    Directory appDocDirectory = await getApplicationDocumentsDirectory();
+    Directory appCacheDirectory = await getApplicationCacheDirectory();
 
-    File f = File(
-        "${appDocDirectory.path}/eye_tracking_data_${usernameInput.text}_${DateTime.now().toString().replaceAll(" ", "_").replaceAll(":", "-")}.csv");
+    File file = File(appCacheDirectory.path + "/eye_tracking_data.csv");
 
-    f.writeAsStringSync(csv);
+    file.writeAsStringSync(csv);
 
-    String? fileUrl;
+    return file;
+  }
+
+  void sendGameData() async {
     try {
-      fileUrl =
-          await bkl.Backendless.files.upload(f, "Tetris/eye_tracking_data");
+      if (resultId == null) {
+        var uri = Uri.parse('${kBaseUrl}results/bulk');
+        var request = http.MultipartRequest('POST', uri);
+
+        // Add authorization header
+        request.headers['Authorization'] = 'Bearer $token';
+
+        // Prepare the request body
+        var requestBody = {
+          "research": researchId,
+        };
+
+        // Convert the request body to JSON and add it to the request
+        var jsonBody = json.encode(requestBody);
+        request.fields['data'] = jsonBody;
+
+        log(request.fields.toString());
+
+        var streamedResponse = await request.send();
+        var response = await http.Response.fromStream(streamedResponse);
+
+        log(response.body);
+        var responseBody = json.decode(response.body);
+        if (response.statusCode == 200) {
+          resultId = responseBody["documentId"];
+        } else {
+          log("Error! ${responseBody["error"]["message"]} || Status Code: ${response.statusCode}");
+        }
+      }
+
+      if (resultId != null) {
+        File? eyeTrackingFile;
+        if (useEyeTracking) {
+          Map<String, List<Map<String, int>>> eyeCoordinatesJSON =
+              eyeCoordinatesToJson(eyeCoordinates);
+
+          eyeTrackingFile = await writeEyeTrackingCsvFile(
+              eyeCoordinatesJSON["Eye Coordinates"]!);
+        }
+
+        final Game gameData = Game(
+          game: game,
+          resultId: resultId,
+          sessions: sessions,
+          eyeTrackingData: eyeTrackingFile,
+        );
+
+        var headers = {'Authorization': 'Bearer $token'};
+        var request =
+            http.MultipartRequest('POST', Uri.parse('${kBaseUrl}metatrises'));
+        request.fields.addAll({'data': json.encode(gameData.toJson())});
+
+        if (gameData.eyeTrackingData != null) {
+          request.files.add(await http.MultipartFile.fromPath(
+              'eyeTracking', gameData.eyeTrackingData!.path));
+        }
+        request.headers.addAll(headers);
+
+        http.StreamedResponse response = await request.send();
+
+        var responseBody = json.decode(await response.stream.bytesToString());
+        log(responseBody.toString());
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          log("Session Created Successfully");
+        } else {
+          log("Error! ${responseBody["error"]["message"]} || Status Code: ${response.statusCode}");
+        }
+        if (eyeTrackingFile != null) {
+          eyeTrackingFile.delete();
+        }
+      }
     } catch (e) {
-      fileUrl = "";
       log(e.toString());
     }
-
-    f.delete();
-
-    return fileUrl;
-  }
-
-  Future<String?> uploadEyeTrackingData() async {
-    String? eyeTrackingObjId;
-    if (useEyeTracking) {
-      Map<String, List<Map<String, int>>> eyeCoordinatesJSON =
-          eyeCoordinatesToJson(eyeCoordinates);
-
-      String? fileReference = await writeAndUploadEyeTrackingCsvFile(
-          eyeCoordinatesJSON["Eye Coordinates"]!);
-
-      Map<dynamic, dynamic>? eyeTrackingObjJson;
-
-      try {
-        eyeTrackingObjJson = await bkl.Backendless.data
-            .of("TetrisEyeTrackingData")
-            .save(TetrisEyeTrackingData(
-                    eye_tracking_data_csv_file: fileReference!,
-                    assigned_username:
-                        integrationInitialized && username != null
-                            ? username!
-                            : usernameInput.text)
-                .toJson())
-            .catchError((error, stackTrace) {
-          log("Error: ${error.toString()}");
-          // showSnackBar(context, "Server Error: ${error.toString()}");
-        });
-      } catch (e) {
-        log(e.toString());
-      }
-
-      eyeTrackingObjId =
-          eyeTrackingObjJson == null ? null : eyeTrackingObjJson["objectId"];
-    }
-    return eyeTrackingObjId;
-  }
-
-  void sendGameData() {
-    Future<String?> eyeTrackingObjId = uploadEyeTrackingData();
-
-    List<String> sessionsIds = [];
-
-    final List<Future<dynamic>> sessionsIdsRespnses = [];
-
-    for (var i = 0; i < sessionsInJson.length; i += 99) {
-      final response = bkl.Backendless.data
-          .of("TetrisSessions")
-          .create(sessionsInJson.sublist(i, min(i + 99, sessionsInJson.length)))
-          .then((value) {
-        sessionsIds.addAll(value!);
-      }).catchError((error, stackTrace) {
-        log("Error: ${error.toString()}");
-        // showSnackBar(context, "Server Error: ${error.toString()}");
-      });
-      sessionsIdsRespnses.add(response);
-    }
-
-    bkl.Backendless.data
-        .of("TetrisGames")
-        .save(TetrisGames(
-          avg_pits: averages["pits"]!.average,
-          total_tetrises: tetrises,
-          final_score: score,
-          level_reached: level,
-          total_lines_cleared: lines,
-          game: game,
-          avg_rotations: averages["rotations"]!.average,
-          avg_proportion_of_user_drops:
-              averages["proportion_of_user_drops"]!.average,
-          avg_minimum_rotation_difference:
-              averages["minimum_rotation_difference"]!.average,
-          avg_minimum_translation_difference:
-              averages["minimum_translation_difference"]!.average,
-          avg_maximum_differences: averages["maximum_differences"]!.average,
-          avg_initial_latency: averages["initial_latency"]!.average,
-          avg_drop_latency: averages["drop_latency"]!.average,
-          avg_response_latency: averages["response_latency"]!.average,
-          avg_max_well: averages["max_well"]!.average,
-          avg_deep_wells: averages["deep_wells"]!.average,
-          avg_cumulative_wells: averages["cumulative_wells"]!.average,
-          avg_column_transitions: averages["column_transitions"]!.average,
-          avg_row_transitions: averages["row_transitions"]!.average,
-          avg_landing_height: averages["landing_height"]!.average,
-          avg_matches: averages["matches"]!.average,
-          avg_delta_max_height: averages["delta_max_height"]!.average,
-          avg_delta_pits: averages["delta_pits"]!.average,
-          avg_pit_depth: averages["pit_depth"]!.average,
-          avg_lumped_pits: averages["lumped_pits"]!.average,
-          avg_pit_rows: averages["pit_rows"]!.average,
-          avg_max_height: averages["max_height"]!.average,
-          avg_min_height: averages["min_height"]!.average,
-          avg_wells: averages["wells"]!.average,
-          avg_lat: averages["avg_lat"]!.average,
-          avg_cd_9: averages["cd_9"]!.average,
-          avg_mean_height: averages["mean_height"]!.average,
-          avg_pattern_div: averages["pattern_div"]!.average,
-          avg_total_movements: averages["total_movements"]!.average,
-          avg_weighted_cells: averages["weighted_cells"]!.average,
-          avg_jaggedness: averages["jaggedness"]!.average,
-          avg_indicator_value: averages["indicator_value"]!.average,
-          elapsed_time: timestamp,
-          assigned_username: integrationInitialized && username != null
-              ? username!
-              : usernameInput.text,
-        ).toJson())
-        .then((sendGamesResponse) {
-      eyeTrackingObjId.then((value) {
-        if (value != null) {
-          bkl.Backendless.data.of("TetrisGames").addRelation(
-              sendGamesResponse!["objectId"], "eye_tracking_data",
-              childrenObjectIds: [value]);
-        }
-      });
-
-      Future.wait(sessionsIdsRespnses).then((value) {
-        bkl.Backendless.data.of("TetrisGames").addRelation(
-            sendGamesResponse!["objectId"], "sessions",
-            childrenObjectIds: sessionsIds);
-      });
-
-      if (integrationInitialized && userId != null) {
-        bkl.Backendless.data.of("TetrisGames").addRelation(
-            sendGamesResponse!["objectId"], "userId",
-            childrenObjectIds: [userId!]);
-      }
-
-      if (integrationInitialized && researchId != null) {
-        bkl.Backendless.data.of("TetrisGames").addRelation(
-            sendGamesResponse!["objectId"], "researchId",
-            childrenObjectIds: [researchId!]);
-      }
-
-      // showSnackBar(context, "Game created!");
-    }).catchError((error, stackTrace) {
-      log("Error: ${error.toString()}");
-      // showSnackBar(context, "Server Error: ${error.toString()}");
-    });
   }
 
   void calcTransitions() {
@@ -1119,17 +969,17 @@ class _GamePageState extends State<GamePage> {
         minimumRotationsDif = currentBlock!.rotateNum - 1;
       }
     } else if (currentBlock!.name != "SQBlock") {
-      int RNum = 0;
-      int LNum = 0;
+      int rNum = 0;
+      int lNum = 0;
       for (var i = 0; i < currentBlock!.rotatePattern.length; i++) {
         if (currentBlock!.rotatePattern[i] == "R") {
-          RNum++;
+          rNum++;
         } else {
-          LNum++;
+          lNum++;
         }
       }
       minimumRotationsDif =
-          currentBlock!.rotateNum - (((RNum - LNum).abs()) % 4);
+          currentBlock!.rotateNum - (((rNum - lNum).abs()) % 4);
     }
     debugPrint("/" * 20);
     debugPrint("$minimumRotationsDif");
@@ -1185,12 +1035,9 @@ class _GamePageState extends State<GamePage> {
         });
       }
 
-      try {
-        if (!tutorialMode) {
-          sendGameData();
-        }
-      } catch (e) {
-        log("$e");
+      // save game data
+      if (!tutorialMode && integrationInitialized) {
+        sendGameData();
       }
     }
     // Check if the current block is at the bottom or above an old block
@@ -1241,14 +1088,9 @@ class _GamePageState extends State<GamePage> {
 
       changeIndData();
 
-      // send data
-      fillAveragesMap();
-      try {
-        if (!tutorialMode) {
-          saveSessionData();
-        }
-      } catch (e) {
-        log("$e");
+      // save session data
+      if (!tutorialMode && integrationInitialized) {
+        saveSessionData();
       }
 
       // Draw new block
@@ -1279,9 +1121,9 @@ class _GamePageState extends State<GamePage> {
     // Current Block
     for (var point in currentBlock!.points) {
       Positioned newPoint = Positioned(
+        child: getTetrisPoint(currentBlock!.color),
         left: point.x * pointSize,
         top: point.y * pointSize,
-        child: getTetrisPoint(currentBlock!.color),
       );
       visiblePoints.add(newPoint);
     }
@@ -1289,9 +1131,9 @@ class _GamePageState extends State<GamePage> {
     // Old Blocks
     for (var point in alivePoints) {
       Positioned newPoint = Positioned(
+        child: getTetrisPoint(point.color),
         left: point.x * pointSize,
         top: point.y * pointSize,
-        child: getTetrisPoint(point.color),
       );
       visiblePoints.add(newPoint);
     }
@@ -1336,13 +1178,13 @@ class _GamePageState extends State<GamePage> {
 
     for (var point in nextBlockDisplay!.points) {
       Positioned newPoint = Positioned(
+        child: getTetrisPoint(nextBlock!.color),
         left: (point.x < 0 || point.y > 0)
             ? (point.x + 1) * pointSize
             : point.x * pointSize,
         top: (point.y < 0 || point.x > 0)
             ? (point.y + 1) * pointSize
             : point.y * pointSize,
-        child: getTetrisPoint(nextBlock!.color),
       );
       visiblePoints.add(newPoint);
     }
@@ -1370,44 +1212,11 @@ class _GamePageState extends State<GamePage> {
       Colors.orange,
       Colors.red,
     ];
-    averages = {
-      "pits": [],
-      "rotations": [],
-      "proportion_of_user_drops": [],
-      "minimum_rotation_difference": [],
-      "minimum_translation_difference": [],
-      "maximum_differences": [],
-      "initial_latency": [],
-      "drop_latency": [],
-      "response_latency": [],
-      "max_well": [],
-      "deep_wells": [],
-      "cumulative_wells": [],
-      "column_transitions": [],
-      "row_transitions": [],
-      "landing_height": [],
-      "matches": [],
-      "delta_max_height": [],
-      "delta_pits": [],
-      "pit_depth": [],
-      "lumped_pits": [],
-      "pit_rows": [],
-      "max_height": [],
-      "min_height": [],
-      "wells": [],
-      "avg_lat": [],
-      "cd_9": [],
-      "mean_height": [],
-      "pattern_div": [],
-      "total_movements": [],
-      "weighted_cells": [],
-      "jaggedness": [],
-      "indicator_value": [],
-    };
+
     eyeCoordinates.clear();
     enableEyeTracking = true;
 
-    sessionsInJson.clear();
+    sessions.clear();
   }
 
   @override
@@ -1425,7 +1234,7 @@ class _GamePageState extends State<GamePage> {
     pointSize = height / boardHeight;
 
     return PopScope(
-      onPopInvoked: (didPop) {
+      onPopInvokedWithResult: (didPop, result) {
         if (didPop) {
           try {
             timer.cancel();
@@ -1843,12 +1652,12 @@ class _GamePageState extends State<GamePage> {
                                           });
                                         }
                                       },
-                                      style: ElevatedButton.styleFrom(
-                                          minimumSize: const Size(65, 45)),
                                       child: const Icon(
                                         Icons.arrow_left,
                                         color: Colors.white,
                                       ),
+                                      style: ElevatedButton.styleFrom(
+                                          minimumSize: const Size(65, 45)),
                                     ),
                                   ),
                                 ),
@@ -1884,12 +1693,12 @@ class _GamePageState extends State<GamePage> {
                                           });
                                         }
                                       },
-                                      style: ElevatedButton.styleFrom(
-                                          minimumSize: const Size(65, 45)),
                                       child: const Icon(
                                         Icons.arrow_right,
                                         color: Colors.white,
                                       ),
+                                      style: ElevatedButton.styleFrom(
+                                          minimumSize: const Size(65, 45)),
                                     ),
                                   ),
                                 ),
@@ -1925,12 +1734,12 @@ class _GamePageState extends State<GamePage> {
                                     : null,
                                 child: ElevatedButton(
                                   onPressed: () {},
-                                  style: ElevatedButton.styleFrom(
-                                      minimumSize: const Size(65, 45)),
                                   child: const Icon(
                                     Icons.arrow_drop_down,
                                     color: Colors.white,
                                   ),
+                                  style: ElevatedButton.styleFrom(
+                                      minimumSize: const Size(65, 45)),
                                 ),
                               ),
                             ),
@@ -1966,11 +1775,6 @@ class _GamePageState extends State<GamePage> {
                                 }
                               });
                             },
-                            style: ElevatedButton.styleFrom(
-                              shape: const CircleBorder(),
-                              backgroundColor: Colors.red,
-                              minimumSize: const Size(70, 70),
-                            ),
                             child: Text(
                               startButton == "Start"
                                   ? translation(context).start
@@ -1979,6 +1783,11 @@ class _GamePageState extends State<GamePage> {
                                 fontSize: 14,
                                 color: Colors.white,
                               ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              shape: const CircleBorder(),
+                              backgroundColor: Colors.red,
+                              minimumSize: const Size(70, 70),
                             ),
                           ),
                         ),
@@ -1998,12 +1807,12 @@ class _GamePageState extends State<GamePage> {
                                 });
                               }
                             },
-                            style: ElevatedButton.styleFrom(
-                                minimumSize: const Size(65, 45)),
                             child: const Icon(
                               Icons.rotate_left,
                               color: Colors.white,
                             ),
+                            style: ElevatedButton.styleFrom(
+                                minimumSize: const Size(65, 45)),
                           ),
                         ),
                         Padding(
@@ -2021,12 +1830,12 @@ class _GamePageState extends State<GamePage> {
                                 });
                               }
                             },
-                            style: ElevatedButton.styleFrom(
-                                minimumSize: const Size(65, 45)),
                             child: const Icon(
                               Icons.rotate_right,
                               color: Colors.white,
                             ),
+                            style: ElevatedButton.styleFrom(
+                                minimumSize: const Size(65, 45)),
                           ),
                         ),
                       ],

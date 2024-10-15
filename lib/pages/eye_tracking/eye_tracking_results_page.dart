@@ -6,7 +6,7 @@ import 'package:metatris_game_package/pages/game_page.dart';
 import '../helper/language_constants.dart';
 
 class EyeTrackingResultsPage extends StatefulWidget {
-  const EyeTrackingResultsPage({super.key});
+  const EyeTrackingResultsPage({Key? key}) : super(key: key);
 
   @override
   State<EyeTrackingResultsPage> createState() => _EyeTrackingResultsPageState();
@@ -15,7 +15,6 @@ class EyeTrackingResultsPage extends StatefulWidget {
 class _EyeTrackingResultsPageState extends State<EyeTrackingResultsPage> {
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(

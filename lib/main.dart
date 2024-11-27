@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:metatris_game_package/pages/helper/language_constants.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'pages/helper/language_constants.dart';
 import 'routes/routes.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
@@ -11,7 +12,7 @@ void main() {
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -39,17 +40,20 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Metatris',
-      theme: ThemeData(useMaterial3: false),
-      debugShowCheckedModeBanner: false,
-      initialRoute: RouteManager.homePage,
-      onGenerateRoute: RouteManager.generateRoute,
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      locale: _locale,
-      darkTheme: ThemeData.dark(useMaterial3: false),
-      themeMode: ThemeMode.light,
+    return ScreenUtilInit(
+      designSize: const Size(428, 926),
+      child: MaterialApp(
+        title: 'Metatris',
+        theme: ThemeData(useMaterial3: false),
+        debugShowCheckedModeBanner: false,
+        initialRoute: RouteManager.homePage,
+        onGenerateRoute: RouteManager.generateRoute,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: _locale,
+        darkTheme: ThemeData.dark(useMaterial3: false),
+        themeMode: ThemeMode.light,
+      ),
     );
   }
 }

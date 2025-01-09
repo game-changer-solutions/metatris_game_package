@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../routes/routes.dart';
 import '../helper/language_constants.dart';
+
+import '../../routes/routes.dart';
 import 'widgets/tutorial_pages_appbar.dart';
 import 'widgets/tutorial_pages_next_button.dart';
 

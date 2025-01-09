@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:metatris_game_package/pages/eye_tracking/eye_tracking_results_page.dart';
+import '../pages/eye_tracking/eye_tracking_results_page.dart';
 
 import '../pages/game_page.dart';
 import '../pages/home_page.dart';

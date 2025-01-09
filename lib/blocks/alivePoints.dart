@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:metatris_game_package/blocks/point.dart';
+import 'point.dart';
 
 class AlivePoint extends Point {
   Color color;

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:metatris_game_package/pages/helper/language_constants.dart';
-import 'package:metatris_game_package/pages/home_page.dart';
+import 'language_constants.dart';
+import '../home_page.dart';
 import '../../init.dart';
 import '../game_page.dart';
 import '../../blocks/block.dart';

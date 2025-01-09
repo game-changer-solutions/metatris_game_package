@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:metatris_game_package/routes/routes.dart';
+import '../../../routes/routes.dart';
 
 import '../../../init.dart';
 import '../../helper/language_constants.dart';
@@ -9,10 +9,10 @@ class TutorialPagesNextButton extends StatelessWidget {
   final String routeName;
 
   const TutorialPagesNextButton({
-    super.key,
+    Key? key,
     this.name,
     required this.routeName,
-  });
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

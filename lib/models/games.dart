@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:metatris_game_package/models/sessions.dart';
+import 'sessions.dart';
 
 class Game {
   int? game;

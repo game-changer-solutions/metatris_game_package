@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:metatris_game_package/pages/eye_tracking/eye_tracking.dart';
+import 'eye_tracking.dart';
 
-import 'package:metatris_game_package/pages/game_page.dart';
+import '../game_page.dart';
 
 import '../helper/language_constants.dart';
 

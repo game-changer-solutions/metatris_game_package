@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:metatris_game_package/pages/helper/language_constants.dart';
+import '../helper/language_constants.dart';
 
 import '../../routes/routes.dart';
 import 'widgets/tutorial_pages_appbar.dart';
 import 'widgets/tutorial_pages_next_button.dart';
 
 class TutorialPage7 extends StatelessWidget {
-  const TutorialPage7({super.key});
+  const TutorialPage7({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

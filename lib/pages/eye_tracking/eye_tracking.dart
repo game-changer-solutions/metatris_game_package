@@ -5,8 +5,9 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:learning_face_detection/learning_face_detection.dart';
 import 'package:learning_input_image/learning_input_image.dart';
-import 'package:metatris_game_package/pages/home_page.dart';
-import 'package:metatris_game_package/pages/tutorial_pages/tutorial_page11.dart';
+
+import '../home_page.dart';
+import '../tutorial_pages/tutorial_page11.dart';
 
 List<Offset> eyeCoordinates = [];
 

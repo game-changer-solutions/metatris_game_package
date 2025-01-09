@@ -18,8 +18,8 @@ bool useEyeTracking = true;
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({
-    super.key,
-  });
+    Key? key,
+  }) : super(key: key);
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -62,13 +62,10 @@ class _MyHomePageState extends State<MyHomePage> {
             if (!integrationInitialized)
               ElevatedButton(
                 onPressed: () async {
-                  Locale locale = await setLocale(
+                  Locale _locale = await setLocale(
                       translation(context).localeName == "en" ? "ar" : "en");
-                  MyApp.setLocale(context, locale);
+                  MyApp.setLocale(context, _locale);
                 },
-                style: ButtonStyle(
-                    backgroundColor:
-                        WidgetStateProperty.all<Color>(Colors.lightBlueAccent)),
                 child: Text(
                   translation(context).changeLanguage,
                   style: const TextStyle(
@@ -77,6 +74,9 @@ class _MyHomePageState extends State<MyHomePage> {
                     color: Colors.white,
                   ),
                 ),
+                style: ButtonStyle(
+                    backgroundColor:
+                        WidgetStateProperty.all<Color>(Colors.lightBlueAccent)),
               )
           ],
         ),

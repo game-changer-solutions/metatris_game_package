@@ -35,6 +35,8 @@ dependencies:
 
 dependency_overrides:
   camera_android: 0.10.4
+  path_drawing: ^1.0.1
+  flutter_svg: ^2.0.17
 
 dev_dependencies:
   flutter_test:

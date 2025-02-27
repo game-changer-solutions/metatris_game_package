@@ -6,13 +6,16 @@ import 'package:flutter/material.dart';
 import 'package:learning_face_detection/learning_face_detection.dart';
 import 'package:learning_input_image/learning_input_image.dart';
 
+import '../../models/eye_tracking_coordinates.dart';
 import '../home_page.dart';
 import '../tutorial_pages/tutorial_page11.dart';
 
-List<Offset> eyeCoordinates = [];
+List<EyeCoordinate> eyeCoordinates = [];
 
 Size? originalSize;
 InputImageRotation? rotation;
+
+Stopwatch eyeTrackingStopwatch = Stopwatch();
 
 class EyeTracking extends StatefulWidget {
   const EyeTracking({Key? key}) : super(key: key);
@@ -39,6 +42,12 @@ class _EyeTrackingState extends State<EyeTracking> {
     enableClassification: true,
     enableTracking: true,
   );
+
+  @override
+  void initState() {
+    super.initState();
+    eyeTrackingStopwatch.start();
+  }
 
   Future<void> _detectFaces(InputImage image) async {
     originalSize = image.metadata?.size;
@@ -165,11 +174,15 @@ class _EyeTrackingState extends State<EyeTracking> {
                   (yScreen / _rightEyeSize.height)) *
               5;
     }
-    Offset eyeOffset =
-        Offset(xEye.floor().toDouble().abs(), yEye.floor().toDouble().abs());
-    eyeCoordinates.add(eyeOffset);
-    debugPrint("X Coordinate: ${eyeOffset.dx}");
-    debugPrint("Y Coordinate: ${eyeOffset.dy}");
+
+    EyeCoordinate eyeCoordinate = EyeCoordinate(
+        x: xEye.floor().toDouble().abs(),
+        y: yEye.floor().toDouble().abs(),
+        timestamp: eyeTrackingStopwatch.elapsedMilliseconds);
+    eyeCoordinates.add(eyeCoordinate);
+    debugPrint("X Coordinate: ${eyeCoordinate.x}");
+    debugPrint("Y Coordinate: ${eyeCoordinate.y}");
+    debugPrint("Timestamp: ${eyeCoordinate.timestamp}");
     // for (var eyeCoordinate in eyeCoordinates) {
     //   canvas.drawCircle(
     //       Offset(
@@ -189,6 +202,7 @@ class _EyeTrackingState extends State<EyeTracking> {
   @override
   void dispose() {
     _detector.dispose();
+    eyeTrackingStopwatch.stop();
     super.dispose();
   }
 

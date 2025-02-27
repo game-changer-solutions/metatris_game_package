@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../models/eye_tracking_coordinates.dart';
 import 'eye_tracking.dart';
 
 import '../game_page.dart';
@@ -52,20 +53,20 @@ class _EyeTrackingResultsPageState extends State<EyeTrackingResultsPage> {
 }
 
 class ResultsPainter extends CustomPainter {
-  final List<Offset> marks;
+  final List<EyeCoordinate> marks;
   const ResultsPainter(this.marks);
 
   @override
   void paint(Canvas canvas, Size size) async {
     for (var mark in marks) {
       canvas.drawCircle(
-          mark,
+          Offset(mark.x, mark.y),
           15,
           Paint()
             ..style = PaintingStyle.fill
             // ..strokeWidth = 1.0
             ..color = const Color.fromARGB(100, 76, 175, 79));
-      print("Eye Coordinates: $mark");
+      debugPrint("Eye Coordinates: $mark");
     }
   }
 

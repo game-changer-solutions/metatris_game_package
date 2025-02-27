@@ -10,6 +10,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:intl/intl.dart' hide TextDirection;
 import 'package:path_provider/path_provider.dart';
 import 'package:screenshot/screenshot.dart';
 import '../blocks/Iblock.dart';
@@ -23,6 +24,7 @@ import 'package:step_progress_indicator/step_progress_indicator.dart';
 import '../blocks/alivePoints.dart';
 import '../blocks/block.dart';
 import '../init.dart';
+import '../models/eye_tracking_coordinates.dart';
 import '../models/games.dart';
 import '../models/sessions.dart';
 import 'eye_tracking/eye_tracking.dart';
@@ -149,6 +151,7 @@ class _GamePageState extends State<GamePage> {
       currentBlock = getRandomBlock();
       rotationCenterX = currentBlock!.rotationCenter.x;
       nextBlock = getRandomBlock();
+      eyeTrackingStopwatch.reset();
     });
     drawBlockDate = DateTime.now();
     runGameTimer();
@@ -809,26 +812,7 @@ class _GamePageState extends State<GamePage> {
     sessions.add(session);
   }
 
-  Map<String, List<Map<String, int>>> eyeCoordinatesToJson(
-      List<Offset> eyeCoordinates) {
-    Map<String, List<Map<String, int>>> eyeCoordinatesJSON = {
-      "Eye Coordinates": []
-    };
-    int timestamp = 1;
-    for (var eyeCoordinate in eyeCoordinates) {
-      eyeCoordinatesJSON["Eye Coordinates"]!.add({
-        "X": eyeCoordinate.dx.toInt(),
-        "Y": eyeCoordinate.dy.toInt(),
-        "Timestamp": timestamp,
-      });
-      if (eyeCoordinatesJSON["Eye Coordinates"]!.length % 30 == 0) {
-        timestamp++;
-      }
-    }
-    return eyeCoordinatesJSON;
-  }
-
-  Future<File> writeEyeTrackingCsvFile(List<Map<String, int>> points) async {
+  Future<File> writeEyeTrackingCsvFile(List<EyeCoordinate> points) async {
     List<List<dynamic>> rows = [];
 
     List<dynamic> mainRow = [];
@@ -840,9 +824,9 @@ class _GamePageState extends State<GamePage> {
 
     for (var point in points) {
       List<dynamic> row = [];
-      row.add(point["X"]);
-      row.add(point["Y"]);
-      row.add(point["Timestamp"]);
+      row.add(point.x);
+      row.add(point.y);
+      row.add(point.timestamp);
       row.add("\n");
       rows.add(row);
     }
@@ -851,7 +835,8 @@ class _GamePageState extends State<GamePage> {
 
     Directory appCacheDirectory = await getApplicationCacheDirectory();
 
-    File file = File(appCacheDirectory.path + "/eye_tracking_data.csv");
+    File file = File(appCacheDirectory.path +
+        "/eye_tracking_data_${DateFormat('yyyy_MM_dd_T_hh_mm_ss').format(DateTime.now())}.csv");
 
     file.writeAsStringSync(csv);
 
@@ -859,84 +844,103 @@ class _GamePageState extends State<GamePage> {
   }
 
   void sendGameData() async {
-    try {
-      if (resultId == null) {
-        var uri = Uri.parse('${kBaseUrl}results/bulk');
-        var request = http.MultipartRequest('POST', uri);
+    // try {
+    var headers = {'Authorization': 'Bearer $token'};
 
-        // Add authorization header
-        request.headers['Authorization'] = 'Bearer $token';
+    if (resultId == null) {
+      await _getResultId(headers);
+    }
 
-        // Prepare the request body
-        var requestBody = {
-          "research": researchId,
-          "platform": defaultTargetPlatform == TargetPlatform.iOS ||
-                  defaultTargetPlatform == TargetPlatform.android
-              ? 'mobile'
-              : 'web',
-        };
-
-        // Convert the request body to JSON and add it to the request
-        var jsonBody = json.encode(requestBody);
-        request.fields['data'] = jsonBody;
-
-        log(request.fields.toString());
-
-        var streamedResponse = await request.send();
-        var response = await http.Response.fromStream(streamedResponse);
-
-        log(response.body);
-        var responseBody = json.decode(response.body);
-        if (response.statusCode == 200) {
-          resultId = responseBody["documentId"];
-        } else {
-          log("Error! ${responseBody["error"]["message"]} || Status Code: ${response.statusCode}");
-        }
+    if (resultId != null) {
+      int? eyeTrackingFileId;
+      if (useEyeTracking) {
+        eyeTrackingFileId = await _uploadEyeTrackingFile(headers);
       }
 
-      if (resultId != null) {
-        File? eyeTrackingFile;
-        if (useEyeTracking) {
-          Map<String, List<Map<String, int>>> eyeCoordinatesJSON =
-              eyeCoordinatesToJson(eyeCoordinates);
+      final Game gameData = Game(
+        game: game,
+        resultId: resultId,
+        sessions: sessions,
+        eyeTrackingFileId: eyeTrackingFileId,
+      );
 
-          eyeTrackingFile = await writeEyeTrackingCsvFile(
-              eyeCoordinatesJSON["Eye Coordinates"]!);
-        }
+      var request = http.Request('POST', Uri.parse('${kBaseUrl}metatrises'));
+      request.body = json.encode({"data": gameData.toJson()});
 
-        final Game gameData = Game(
-          game: game,
-          resultId: resultId,
-          sessions: sessions,
-          eyeTrackingData: eyeTrackingFile,
-        );
+      request.headers.addAll({...headers, 'Content-Type': 'application/json'});
 
-        var headers = {'Authorization': 'Bearer $token'};
-        var request =
-            http.MultipartRequest('POST', Uri.parse('${kBaseUrl}metatrises'));
-        request.fields.addAll({'data': json.encode(gameData.toJson())});
+      http.StreamedResponse response = await request.send();
 
-        if (gameData.eyeTrackingData != null) {
-          request.files.add(await http.MultipartFile.fromPath(
-              'eyeTracking', gameData.eyeTrackingData!.path));
-        }
-        request.headers.addAll(headers);
-
-        http.StreamedResponse response = await request.send();
-
-        var responseBody = json.decode(await response.stream.bytesToString());
-        log(responseBody.toString());
-        if (response.statusCode == 200 || response.statusCode == 201) {
-          log("Session Created Successfully");
-        } else {
-          log("Error! ${responseBody["error"]["message"]} || Status Code: ${response.statusCode}");
-        }
-        if (eyeTrackingFile != null) {
-          eyeTrackingFile.delete();
-        }
+      var responseBody = json.decode(await response.stream.bytesToString());
+      log(responseBody.toString());
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        log("Session Created Successfully");
+      } else {
+        log("Error! ${responseBody["error"]["message"]} || Status Code: ${response.statusCode}");
       }
-    } catch (e) {
-      log(e.toString());
+    }
+    // } catch (e) {
+    //   log(e.toString());
+    // }
+  }
+
+  Future<int?> _uploadEyeTrackingFile(Map<String, String> headers) async {
+    File? eyeTrackingFile = await writeEyeTrackingCsvFile(eyeCoordinates);
+
+    var request = http.MultipartRequest('POST', Uri.parse('${kBaseUrl}upload'));
+    request.files
+        .add(await http.MultipartFile.fromPath('files', eyeTrackingFile.path));
+    request.headers.addAll(headers);
+
+    http.StreamedResponse response = await request.send();
+
+    var responseBody = json.decode(await response.stream.bytesToString());
+
+    log(responseBody.toString());
+
+    int? fileId;
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      fileId = responseBody[0]["id"];
+      log("File Uploaded Successfully");
+    } else {
+      log("Error! ${responseBody["error"]["message"]} || Status Code: ${response.statusCode}");
+    }
+    eyeTrackingFile.delete();
+    return fileId;
+  }
+
+  Future<void> _getResultId(Map<String, String> headers) async {
+    var uri = Uri.parse('${kBaseUrl}results/bulk');
+    var request = http.MultipartRequest('POST', uri);
+
+    // Add authorization header
+    request.headers.addAll(headers);
+
+    // Prepare the request body
+    var requestBody = {
+      "research": researchId,
+      "platform": defaultTargetPlatform == TargetPlatform.iOS ||
+              defaultTargetPlatform == TargetPlatform.android
+          ? 'mobile'
+          : 'web',
+    };
+
+    // Convert the request body to JSON and add it to the request
+    var jsonBody = json.encode(requestBody);
+    request.fields['data'] = jsonBody;
+
+    log(request.fields.toString());
+
+    var streamedResponse = await request.send();
+    var response = await http.Response.fromStream(streamedResponse);
+
+    log(response.body);
+    var responseBody = json.decode(response.body);
+    if (response.statusCode == 200) {
+      resultId = responseBody["documentId"];
+    } else {
+      log("Error! ${responseBody["error"]["message"]} || Status Code: ${response.statusCode}");
     }
   }
 
@@ -1352,423 +1356,430 @@ class _GamePageState extends State<GamePage> {
           ),
           body: Screenshot(
             controller: screenshotController,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                if (tutorialMode)
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(
-                      "${tutorialModeTime - timestamp < 0 ? 0 : tutorialModeTime - timestamp}",
-                      style: TextStyle(
-                        color: tutorialModeTime - timestamp <= 10
-                            ? Colors.red
-                            : Colors.white,
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                if (showScore)
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(
-                      "${translation(context).score} $score",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16.spMin,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                Directionality(
-                  textDirection: TextDirection.ltr,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      if (showScore)
-                        Column(
-                          children: [
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 8.0),
-                              child: Text(
-                                "${translation(context).tetrises}\n$tetrises",
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                            SizedBox(
-                              height: 30.spMin,
-                            ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 8.0),
-                              child: Text(
-                                "${translation(context).lines}\n$lines",
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                            SizedBox(
-                              height: 30.spMin,
-                            ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 8.0),
-                              child: Text(
-                                "${translation(context).level}\n$level",
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                            SizedBox(
-                              height: 30.spMin,
-                            ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 8.0),
-                              child: Text(
-                                "${translation(context).games}\n$game",
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                          ],
+            child: Container(
+              color: Colors.black,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  if (tutorialMode)
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        "${tutorialModeTime - timestamp < 0 ? 0 : tutorialModeTime - timestamp}",
+                        style: TextStyle(
+                          color: tutorialModeTime - timestamp <= 10
+                              ? Colors.red
+                              : Colors.white,
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
                         ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                                color:
-                                    blocksContainerBorderColor ?? Colors.white,
-                                width: 3),
-                          ),
-                          child: Container(
-                            margin: const EdgeInsets.all(1),
-                            width: width,
-                            height: height,
-                            child: gameOver
-                                ? Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      getGameOverText(score, context),
-                                      const SizedBox(
-                                        height: 30,
-                                      ),
-                                      ElevatedButton(
-                                        onPressed: () {
-                                          resetSomeVariables();
-                                          setState(() {
-                                            game++;
-                                            alivePoints
-                                                .removeWhere((element) => true);
-                                          });
-                                          timer.cancel();
-                                          timestampTimer.cancel();
-                                          startGame();
-                                        },
-                                        child: Text(
-                                          translation(context).tryAgain,
-                                          style: const TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(
-                                        height: 10,
-                                      ),
-                                      !tutorialMode && useEyeTracking
-                                          ? OutlinedButton(
-                                              onPressed: () {
-                                                // Navigator.of(context)
-                                                //     .pushNamed(RouteManager
-                                                //         .eyeTrackingPage);
-                                                Navigator.of(context).push(
-                                                  MaterialPageRoute(
-                                                    builder: (context) =>
-                                                        const EyeTrackingResultsPage(),
-                                                  ),
-                                                );
-                                              },
-                                              style: OutlinedButton.styleFrom(
-                                                shape:
-                                                    const RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.all(
-                                                          Radius.circular(5)),
-                                                ),
-                                                side: BorderSide(
-                                                    color:
-                                                        integrationInitialized &&
-                                                                primaryColor !=
-                                                                    null
-                                                            ? primaryColor!
-                                                            : Colors.blue),
-                                              ),
-                                              child: Text(
-                                                translation(context)
-                                                    .viewEyeTrackingResults,
-                                                style: const TextStyle(
-                                                    fontSize: 10),
-                                              ),
-                                            )
-                                          : Container(),
-                                      const SizedBox(
-                                        height: 10,
-                                      ),
-                                      OutlinedButton(
-                                        onPressed: () {
-                                          try {
-                                            timer.cancel();
-                                            timestampTimer.cancel();
-                                            setState(() {
-                                              enableEyeTracking = false;
-                                              eyeCoordinates.clear();
-                                            });
-                                          } catch (e) {
-                                            log("$e");
-                                          }
-                                          Navigator.pop(context);
-                                        },
-                                        style: OutlinedButton.styleFrom(
-                                          shape: const RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.all(
-                                                Radius.circular(5)),
-                                          ),
-                                          side: BorderSide(
-                                              color: integrationInitialized &&
-                                                      primaryColor != null
-                                                  ? primaryColor!
-                                                  : Colors.blue),
-                                        ),
-                                        child: Text(
-                                          translation(context).exit,
-                                          style: const TextStyle(fontSize: 16),
-                                        ),
-                                      )
-                                    ],
-                                  )
-                                : drawTetrisBlocks(),
-                          ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  if (showScore)
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        "${translation(context).score} $score",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16.spMin,
+                          fontWeight: FontWeight.bold,
                         ),
+                        textAlign: TextAlign.center,
                       ),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          Container(
-                            // width: screenWidth / 5,
-                            // height: 150,
-                            decoration: BoxDecoration(
-                              borderRadius:
-                                  const BorderRadius.all(Radius.circular(10)),
-                              border: Border.all(color: Colors.transparent),
-                            ),
-                            child: Column(children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 8.0),
-                                    child: Text(
-                                      translation(context).nextBlock,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(
-                                height: 10,
-                              ),
-                              SizedBox(
-                                width: (pointSize * 4),
-                                height: (pointSize * 3),
-                                child:
-                                    gameOver ? Container() : drawNextBlocks(),
-                              ),
-                            ]),
-                          ),
-                          SizedBox(
-                            height: 30.spMin,
-                          ),
-                          if (showIndicator)
-                            SizedBox(
-                              // width: screenWidth / 5,
-                              height: 200.spMin,
-                              child: Center(
-                                // child: RotatedBox(
-                                //   quarterTurns: -1,
-                                child: StepProgressIndicator(
-                                  direction: Axis.vertical,
-                                  totalSteps: 100,
-                                  currentStep: indValue.round(),
-                                  size: 30,
-                                  padding: 0,
-                                  // selectedColor: Colors.yellow,
-                                  // unselectedColor: Colors.cyan,
-                                  roundedEdges: const Radius.circular(10),
-                                  selectedGradientColor: const LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: [Colors.grey, Colors.transparent],
-                                  ),
-                                  unselectedGradientColor: LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: indColor,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          SizedBox(height: 20.spMin),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                Directionality(
-                  textDirection: TextDirection.ltr,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Row(
+                    ),
+                  Directionality(
+                    textDirection: TextDirection.ltr,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        if (showScore)
+                          Column(
                             children: [
                               Padding(
                                 padding:
-                                    const EdgeInsets.all(8.0).copyWith(left: 0),
-                                child: GestureDetector(
-                                  onTapDown: _onTapDownMoveLeftButton,
-                                  onTapCancel: _onTapCancelMoveLeftButton,
-                                  child: ElevatedButton(
-                                    onPressed: _onPressedMoveLeftButton,
-                                    child: const Icon(
-                                      Icons.arrow_left,
-                                      color: Colors.white,
-                                    ),
-                                    style: ElevatedButton.styleFrom(
-                                        minimumSize: Size(65.spMin, 45.spMin)),
+                                    const EdgeInsets.symmetric(vertical: 8.0),
+                                child: Text(
+                                  "${translation(context).tetrises}\n$tetrises",
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
                                   ),
+                                  textAlign: TextAlign.center,
                                 ),
                               ),
+                              SizedBox(
+                                height: 30.spMin,
+                              ),
                               Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: GestureDetector(
-                                  onTapDown: _onTapDownMoveRightButton,
-                                  onTapCancel: _onTapCancelMoveRightButton,
-                                  child: ElevatedButton(
-                                    onPressed: _onPressedMoveRightButton,
-                                    child: const Icon(
-                                      Icons.arrow_right,
-                                      color: Colors.white,
-                                    ),
-                                    style: ElevatedButton.styleFrom(
-                                        minimumSize: Size(65.spMin, 45.spMin)),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 8.0),
+                                child: Text(
+                                  "${translation(context).lines}\n$lines",
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
                                   ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                              SizedBox(
+                                height: 30.spMin,
+                              ),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 8.0),
+                                child: Text(
+                                  "${translation(context).level}\n$level",
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                              SizedBox(
+                                height: 30.spMin,
+                              ),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 8.0),
+                                child: Text(
+                                  "${translation(context).games}\n$game",
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  textAlign: TextAlign.center,
                                 ),
                               ),
                             ],
                           ),
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: GestureDetector(
-                              onTapDown: _onTapDownDropDownButton,
-                              onTapCancel: _onTapCancelDropDownButton,
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                  color: blocksContainerBorderColor ??
+                                      Colors.white,
+                                  width: 3),
+                            ),
+                            child: Container(
+                              margin: const EdgeInsets.all(1),
+                              width: width,
+                              height: height,
+                              child: gameOver
+                                  ? Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        getGameOverText(score, context),
+                                        const SizedBox(
+                                          height: 30,
+                                        ),
+                                        ElevatedButton(
+                                          onPressed: () {
+                                            resetSomeVariables();
+                                            setState(() {
+                                              game++;
+                                              alivePoints.removeWhere(
+                                                  (element) => true);
+                                            });
+                                            timer.cancel();
+                                            timestampTimer.cancel();
+                                            startGame();
+                                          },
+                                          child: Text(
+                                            translation(context).tryAgain,
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(
+                                          height: 10,
+                                        ),
+                                        !tutorialMode && useEyeTracking
+                                            ? OutlinedButton(
+                                                onPressed: () {
+                                                  // Navigator.of(context)
+                                                  //     .pushNamed(RouteManager
+                                                  //         .eyeTrackingPage);
+                                                  Navigator.of(context).push(
+                                                    MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          const EyeTrackingResultsPage(),
+                                                    ),
+                                                  );
+                                                },
+                                                style: OutlinedButton.styleFrom(
+                                                  shape:
+                                                      const RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.all(
+                                                            Radius.circular(5)),
+                                                  ),
+                                                  side: BorderSide(
+                                                      color:
+                                                          integrationInitialized &&
+                                                                  primaryColor !=
+                                                                      null
+                                                              ? primaryColor!
+                                                              : Colors.blue),
+                                                ),
+                                                child: Text(
+                                                  translation(context)
+                                                      .viewEyeTrackingResults,
+                                                  style: const TextStyle(
+                                                      fontSize: 10),
+                                                ),
+                                              )
+                                            : Container(),
+                                        const SizedBox(
+                                          height: 10,
+                                        ),
+                                        OutlinedButton(
+                                          onPressed: () {
+                                            try {
+                                              timer.cancel();
+                                              timestampTimer.cancel();
+                                              setState(() {
+                                                enableEyeTracking = false;
+                                                eyeCoordinates.clear();
+                                              });
+                                            } catch (e) {
+                                              log("$e");
+                                            }
+                                            Navigator.pop(context);
+                                          },
+                                          style: OutlinedButton.styleFrom(
+                                            shape: const RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.all(
+                                                  Radius.circular(5)),
+                                            ),
+                                            side: BorderSide(
+                                                color: integrationInitialized &&
+                                                        primaryColor != null
+                                                    ? primaryColor!
+                                                    : Colors.blue),
+                                          ),
+                                          child: Text(
+                                            translation(context).exit,
+                                            style:
+                                                const TextStyle(fontSize: 16),
+                                          ),
+                                        )
+                                      ],
+                                    )
+                                  : drawTetrisBlocks(),
+                            ),
+                          ),
+                        ),
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            Container(
+                              // width: screenWidth / 5,
+                              // height: 150,
+                              decoration: BoxDecoration(
+                                borderRadius:
+                                    const BorderRadius.all(Radius.circular(10)),
+                                border: Border.all(color: Colors.transparent),
+                              ),
+                              child: Column(children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 8.0),
+                                      child: Text(
+                                        translation(context).nextBlock,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(
+                                  height: 10,
+                                ),
+                                SizedBox(
+                                  width: (pointSize * 4),
+                                  height: (pointSize * 3),
+                                  child:
+                                      gameOver ? Container() : drawNextBlocks(),
+                                ),
+                              ]),
+                            ),
+                            SizedBox(
+                              height: 30.spMin,
+                            ),
+                            if (showIndicator)
+                              SizedBox(
+                                // width: screenWidth / 5,
+                                height: 200.spMin,
+                                child: Center(
+                                  // child: RotatedBox(
+                                  //   quarterTurns: -1,
+                                  child: StepProgressIndicator(
+                                    direction: Axis.vertical,
+                                    totalSteps: 100,
+                                    currentStep: indValue.round(),
+                                    size: 30,
+                                    padding: 0,
+                                    // selectedColor: Colors.yellow,
+                                    // unselectedColor: Colors.cyan,
+                                    roundedEdges: const Radius.circular(10),
+                                    selectedGradientColor: const LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [Colors.grey, Colors.transparent],
+                                    ),
+                                    unselectedGradientColor: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: indColor,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            SizedBox(height: 20.spMin),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  Directionality(
+                    textDirection: TextDirection.ltr,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0)
+                                      .copyWith(left: 0),
+                                  child: GestureDetector(
+                                    onTapDown: _onTapDownMoveLeftButton,
+                                    onTapCancel: _onTapCancelMoveLeftButton,
+                                    child: ElevatedButton(
+                                      onPressed: _onPressedMoveLeftButton,
+                                      child: const Icon(
+                                        Icons.arrow_left,
+                                        color: Colors.white,
+                                      ),
+                                      style: ElevatedButton.styleFrom(
+                                          minimumSize:
+                                              Size(65.spMin, 45.spMin)),
+                                    ),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: GestureDetector(
+                                    onTapDown: _onTapDownMoveRightButton,
+                                    onTapCancel: _onTapCancelMoveRightButton,
+                                    child: ElevatedButton(
+                                      onPressed: _onPressedMoveRightButton,
+                                      child: const Icon(
+                                        Icons.arrow_right,
+                                        color: Colors.white,
+                                      ),
+                                      style: ElevatedButton.styleFrom(
+                                          minimumSize:
+                                              Size(65.spMin, 45.spMin)),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: GestureDetector(
+                                onTapDown: _onTapDownDropDownButton,
+                                onTapCancel: _onTapCancelDropDownButton,
+                                child: ElevatedButton(
+                                  onPressed: () {},
+                                  child: const Icon(
+                                    Icons.arrow_drop_down,
+                                    color: Colors.white,
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                      minimumSize: Size(65.spMin, 45.spMin)),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                          child: ElevatedButton(
+                            onPressed: _onPressedStartStopButton,
+                            child: Text(
+                              startButton == "Start"
+                                  ? translation(context).start
+                                  : translation(context).stop,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              shape: const CircleBorder(),
+                              backgroundColor: Colors.red,
+                              minimumSize: Size(70.spMin, 70.spMin),
+                            ),
+                          ),
+                        ),
+                        Row(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
                               child: ElevatedButton(
-                                onPressed: () {},
+                                onPressed: _onPressedRotateLeftButton,
                                 child: const Icon(
-                                  Icons.arrow_drop_down,
+                                  Icons.rotate_left,
                                   color: Colors.white,
                                 ),
                                 style: ElevatedButton.styleFrom(
                                     minimumSize: Size(65.spMin, 45.spMin)),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: ElevatedButton(
-                          onPressed: _onPressedStartStopButton,
-                          child: Text(
-                            startButton == "Start"
-                                ? translation(context).start
-                                : translation(context).stop,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.white,
+                            Padding(
+                              padding:
+                                  const EdgeInsets.all(8.0).copyWith(right: 0),
+                              child: ElevatedButton(
+                                onPressed: _onPressedRotateRightButton,
+                                child: const Icon(
+                                  Icons.rotate_right,
+                                  color: Colors.white,
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                    minimumSize: Size(65.spMin, 45.spMin)),
+                              ),
                             ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            shape: const CircleBorder(),
-                            backgroundColor: Colors.red,
-                            minimumSize: Size(70.spMin, 70.spMin),
-                          ),
+                          ],
                         ),
-                      ),
-                      Row(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: ElevatedButton(
-                              onPressed: _onPressedRotateLeftButton,
-                              child: const Icon(
-                                Icons.rotate_left,
-                                color: Colors.white,
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                  minimumSize: Size(65.spMin, 45.spMin)),
-                            ),
-                          ),
-                          Padding(
-                            padding:
-                                const EdgeInsets.all(8.0).copyWith(right: 0),
-                            child: ElevatedButton(
-                              onPressed: _onPressedRotateRightButton,
-                              child: const Icon(
-                                Icons.rotate_right,
-                                color: Colors.white,
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                  minimumSize: Size(65.spMin, 45.spMin)),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                if (enableEyeTracking) const EyeTracking(),
-              ],
+                  if (enableEyeTracking) const EyeTracking(),
+                ],
+              ),
             ),
           ),
         ),

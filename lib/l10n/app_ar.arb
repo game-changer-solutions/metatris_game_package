@@ -55,5 +55,8 @@
   "tryAndSeeHowMany": "حاول وشاهد كم عدد الخطوط التي يمكنك مسحها في 30 ثانية.",
   "haveFun": "استمتع!!",
   "thereIsNoPointInPlaying": "لا معنى للعب إذا لم تكن تستمتع",
-  "exit": "اخرج"
+  "exit": "اخرج",
+  "scoreDetails": "تفاصيل النتيجة",
+  "indicatorValue": "قيمة المؤشر",
+  "close": "إغلاق"
 }

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'language_constants.dart';
-import '../home_page.dart';
 import '../../init.dart';
 import '../game_page.dart';
 import '../../blocks/block.dart';
@@ -50,7 +49,7 @@ Widget getTetrisPoint(Color color) {
 Widget getGameOverText(int score, BuildContext context) {
   return Center(
     child: Text(
-      "${translation(context).gameOver}${showScore ? "\n${translation(context).endScore}\n$score" : ""}",
+      "${translation(context).gameOver}${"\n${translation(context).endScore}\n$score"}",
       textAlign: TextAlign.center,
       style: TextStyle(
           color: integrationInitialized && primaryColor != null
@@ -65,6 +64,122 @@ Widget getGameOverText(int score, BuildContext context) {
               offset: Offset(2, 2),
             )
           ]),
+    ),
+  );
+}
+
+Widget buildScorePopup(
+    {required int score,
+    required int lines,
+    required int tetrises,
+    required int level,
+    required int games,
+    required double indicatorValue,
+    required BuildContext context}) {
+  return Dialog(
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(16),
+    ),
+    elevation: 10,
+    backgroundColor: Colors.transparent,
+    child: Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.8),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: integrationInitialized && primaryColor != null
+              ? primaryColor!
+              : Colors.blue,
+          width: 2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: (integrationInitialized && primaryColor != null
+                    ? primaryColor!
+                    : Colors.blue)
+                .withValues(alpha: 0.5),
+            blurRadius: 15,
+            spreadRadius: 5,
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            translation(context).scoreDetails,
+            style: TextStyle(
+              color: integrationInitialized && primaryColor != null
+                  ? primaryColor
+                  : Colors.blue,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 20),
+          _buildScoreRow(translation(context).score, score.toString()),
+          _buildScoreRow(translation(context).tetrises, tetrises.toString()),
+          _buildScoreRow(translation(context).lines, lines.toString()),
+          _buildScoreRow(translation(context).level, level.toString()),
+          _buildScoreRow(translation(context).games, games.toString()),
+          _buildScoreRow(translation(context).indicatorValue,
+              indicatorValue.toStringAsFixed(2)),
+          const SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: integrationInitialized && primaryColor != null
+                  ? primaryColor
+                  : Colors.blue,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+            ),
+            child: Text(translation(context).close),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+Widget _buildScoreRow(String label, String value) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8),
+    child: Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+              ),
+            ),
+            Text(
+              value,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        Divider(
+          color: integrationInitialized && primaryColor != null
+              ? primaryColor
+              : Colors.blue,
+          thickness: 2,
+        ),
+      ],
     ),
   );
 }

@@ -6,6 +6,7 @@ import 'dart:io';
 import 'dart:math' hide log;
 import 'package:collection/collection.dart';
 import 'package:csv/csv.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -1479,6 +1480,41 @@ class _GamePageState extends State<GamePage> {
                                           MainAxisAlignment.center,
                                       children: [
                                         getGameOverText(score, context),
+                                        const SizedBox(
+                                          height: 10,
+                                        ),
+                                        OutlinedButton(
+                                          onPressed: () {
+                                            showCupertinoModalPopup(
+                                                context: context,
+                                                builder: (context) =>
+                                                    buildScorePopup(
+                                                        score: score,
+                                                        tetrises: tetrises,
+                                                        lines: lines,
+                                                        level: level,
+                                                        games: game,
+                                                        indicatorValue:
+                                                            indValue,
+                                                        context: context));
+                                          },
+                                          style: OutlinedButton.styleFrom(
+                                            shape: const RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.all(
+                                                  Radius.circular(5)),
+                                            ),
+                                            side: BorderSide(
+                                                color: integrationInitialized &&
+                                                        primaryColor != null
+                                                    ? primaryColor!
+                                                    : Colors.blue),
+                                          ),
+                                          child: Text(
+                                            translation(context).scoreDetails,
+                                            style:
+                                                const TextStyle(fontSize: 16),
+                                          ),
+                                        ),
                                         const SizedBox(
                                           height: 30,
                                         ),

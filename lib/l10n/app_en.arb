@@ -56,5 +56,8 @@
   "tryAndSeeHowMany": "Try and see how\nmany lines you can\nclear in 30 seconds.",
   "haveFun": "Have Fun!!",
   "thereIsNoPointInPlaying": "There's no point in\nplaying a game if\nyou are not having\nfun",
-  "exit": "Exit"
+  "exit": "Exit",
+  "scoreDetails": "Score Details",
+  "indicatorValue": "Indicator Value",
+  "close": "Close"
 }

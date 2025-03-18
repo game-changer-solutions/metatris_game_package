@@ -1462,7 +1462,7 @@ class _GamePageState extends State<GamePage> {
                             ],
                           ),
                         Padding(
-                          padding: const EdgeInsets.all(8.0),
+                          padding: const EdgeInsets.all(3.0),
                           child: Container(
                             decoration: BoxDecoration(
                               border: Border.all(

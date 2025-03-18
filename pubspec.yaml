@@ -4,6 +4,8 @@ version: 0.1.0
 
 homepage: https://github.com/game-changer-solutions/metatris_game_package
 
+publish_to: none # Remove this line if you wish to publish to pub.dev
+
 environment:
   sdk: ">=3.3.1 <4.0.0"
   flutter: ">=1.17.0"
@@ -18,7 +20,9 @@ dependencies:
   step_progress_indicator: ^1.0.2
   permission_handler: ^11.3.0
 
-  learning_face_detection: ^0.0.3
+  learning_face_detection: 
+    path: packages/learning_face_detection-0.0.3
+
   learning_input_image: ^0.0.6+2
   camera: ^0.9.4+5
   screenshot: ^3.0.0
@@ -34,7 +38,7 @@ dependencies:
   flutter_screenutil: ^5.8.4
 
 dependency_overrides:
-  camera_android: 0.10.4
+  camera_android: ^0.10.10+1
   path_drawing: ^1.0.1
   flutter_svg: ^2.0.17
 

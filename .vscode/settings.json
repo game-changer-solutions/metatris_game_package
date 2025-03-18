@@ -11,5 +11,5 @@
     "Ydistance",
     "Zblock"
   ],
-  "dart.flutterSdkPath": ".fvm/versions/3.27.2"
+  "dart.flutterSdkPath": ".fvm/versions/3.29.2"
 }

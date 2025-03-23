@@ -923,8 +923,11 @@ class _GamePageState extends State<GamePage> {
       "research": researchId,
       "platform": defaultTargetPlatform == TargetPlatform.iOS ||
               defaultTargetPlatform == TargetPlatform.android
-          ? 'mobile'
+          ? kIsWeb
+              ? "web-mobile"
+              : 'mobile'
           : 'web',
+      "resultDisplayName": resultDisplayName ?? "",
     };
 
     // Convert the request body to JSON and add it to the request
@@ -1848,6 +1851,7 @@ class _GamePageState extends State<GamePage> {
   }
 
   void _onPressedStartStopButton() {
+    if (gameOver) return;
     setState(() {
       if (startButton == "Stop") {
         startButton = "Start";

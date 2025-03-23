@@ -30,8 +30,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
-    if (defaultTargetPlatform != TargetPlatform.iOS &&
-        defaultTargetPlatform != TargetPlatform.android) {
+    if (kIsWeb) {
       useEyeTracking = false;
     }
     super.initState();
@@ -121,8 +120,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             showScore = newValue;
                           });
                         }),
-                    if (defaultTargetPlatform == TargetPlatform.iOS ||
-                        defaultTargetPlatform == TargetPlatform.android)
+                    if (!kIsWeb)
                       SwitchListTile(
                           inactiveTrackColor: Colors.grey,
                           title: Text(
